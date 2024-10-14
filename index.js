@@ -25,10 +25,16 @@ client.on('messageCreate', async message => {
     if (message.channel.type === ChannelType.DM) {
         console.log(`Received DM from ${message.author.tag}: ${message.content}`);
         message.reply('Hey There, How Can I Help You 🦦?');
+
+        // AI Response using API
+        
  } 
     if (message.channel.type === ChannelType.GuildText) {
-        const userId = message.author.id;
-        console.log(`Received message in guild ${message.guild.name} from ${message.author.tag}: ${message.content}`);
-        message.reply(`Hey There, <@${userId}> How Can I Help You 🦦?`);
+        if (!message.mentions.has(client.user.id)) return; // Ignore messages that didnt't mention the bot
+        else {
+            const userId = message.author.id;
+            console.log(`Received message in guild ${message.guild.name} from ${message.author.tag}: ${message.content}`);
+            message.reply(`Hey There, <@${userId}> How Can I Help You 🦦?`);
+        }
     }
 });
