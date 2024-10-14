@@ -1,0 +1,12 @@
+{
+  "name": "cybvu-bot",
+  "version": "1.0.0",
+  "description": "A versatile Discord bot for managing educational servers, with AI integration and more features to enhance student collaboration and automate moderation tasks",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
