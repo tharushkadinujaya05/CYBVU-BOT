@@ -117,7 +117,7 @@ client.on('messageCreate', async message => {
         if (lowerCaseContent.includes('man up?')) {
             try {
                 // Generate a cool vibe response using Gemini
-                const prompt = `You are a Discord bot. When a user tags you and asks "man up?", generate a funny auto-responder message. Keep it short, no more than one line, so it doesn't look messy on the Discord server.`;
+                const prompt = `You are a Discord bot. When a user tags you and asks "man up?", generate a funny auto-responder message. Keep it short, no more than one line, so it doesn't look messy on the Discord server.(example: "Alyways 24x8 im up 😏", "Bruh, I’ve been up since 200 lines of code ago! 😏💻", "Yup, no downtime here! 😎💻" )`;
                 const result = await runGemini(prompt);
                 await message.reply(result);
                 return; // Exit to avoid falling through to Gemini
@@ -132,7 +132,7 @@ client.on('messageCreate', async message => {
         else if (lowerCaseContent.includes('ping')) {
             try {
                 // Generate a response using Gemini
-                const prompt = `You are a Discord bot. When a user tags you and says "ping", generate a funny, quick auto-responder message. Keep it short, no more than one line, to avoid clutter on the Discord server.`;
+                const prompt = `You are a Discord bot. When a user tags you and says "ping", generate a funny, quick auto-responder message. Keep it short, no more than one line, to avoid clutter on the Discord server.(example: "Pong! 🏓 Quick as ever" , "Ping received! Now, what’s good? 😎", "Pong! 🔥 I'm always on point!")`;
                 const result = await runGemini(prompt);
                 await message.reply(result);
                 return; // Exit to avoid falling through to Gemini
@@ -147,7 +147,7 @@ client.on('messageCreate', async message => {
         else if (lowerCaseContent.includes('up?')) {
             try {
                 // Generate a response using Gemini
-                const prompt = `You are a Discord bot. When a user tags you and says "UP?", generate a funny, relaxed auto-responder message. Keep it short, no more than one line, so it stays clean on the Discord server.`;
+                const prompt = `You are a Discord bot. When a user tags you and says "UP?", generate a funny, relaxed auto-responder message. Keep it short, no more than one line, so it stays clean on the Discord server. (example: "Yup, I’m always up! 😎", "Always up and running! 😏", "Yup, no downtime here! 😎💻")`;
                 const result = await runGemini(prompt);
                 await message.reply(result);
                 return; // Exit to avoid falling through to Gemini
