@@ -143,7 +143,8 @@ client.on('messageCreate', async message => {
             }
         }
 
-        // Custom handling for "UP?"
+
+        // Custom handling for "UP? "
         else if (lowerCaseContent.includes('up?')) {
             try {
                 // Generate a response using Gemini
@@ -174,7 +175,7 @@ client.on('messageCreate', async message => {
                     await message.reply('Oops! Something went wrong while processing your message. Please try again later. 🤖');
                 }
             }
-            return; // Exit after responding to avoid multiple replies
+            return; // Exit after responding to avoid multiple msgs
         }
     }
 
