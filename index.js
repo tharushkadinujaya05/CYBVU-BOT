@@ -2,6 +2,7 @@ require('dotenv').config();
 const { Client, GatewayIntentBits, ChannelType, Partials, SlashCommandBuilder, REST, Routes } = require('discord.js');
 const { runGemini } = require('./gemini.js');
 const { processFile } = require('./fileHandler.js'); // File handling version: Require the file processing handler for different formats
+const express = require('express'); // Import express
 
 const client = new Client({
     intents: [
@@ -14,6 +15,20 @@ const client = new Client({
         Partials.Channel,
         Partials.Reaction,
     ]
+});
+
+// Create an Express app
+const app = express();
+const PORT = process.env.PORT || 3000; // Use environment variable or default to 3000
+
+// Simple endpoint to show bot status
+app.get('/', (req, res) => {
+    res.send('BOT IS UPPP!'); // Response when accessing the root URL
+});
+
+// Start the web server
+app.listen(PORT, () => {
+    console.log(`Web server is running on port ${PORT}`);
 });
 
 client.login(process.env.TOKEN);
