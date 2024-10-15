@@ -112,15 +112,50 @@ client.on('messageCreate', async message => {
 
     // Convert the message content to lowercase for case-insensitive matching
     const lowerCaseContent = message.content.toLowerCase();
-    if (message.mentions.has(client.user.id) && lowerCaseContent.includes('man up?')) {
-        try {
-            // Send a custom cool vibe response
-            await message.reply("Yeah, I'm up! 😎 What's poppin'? Let's get it!");
-            return; // Exit the handler so it doesn't fall through to Gemini
-        } catch (error) {
-            console.error('Error sending custom response:', error);
-            await message.reply('Oops! Something went wrong while sending the custom reply.');
-            return;
+    if (message.mentions.has(client.user.id)) {
+        // Custom handling for "MAN UP?"
+        if (lowerCaseContent.includes('man up?')) {
+            try {
+                // Generate a cool vibe response using Gemini
+                const prompt = `You are a Discord bot. When a user tags you and asks "man up?", generate a funny auto-responder message. Keep it short, no more than one line, so it doesn't look messy on the Discord server.`;
+                const result = await runGemini(prompt);
+                await message.reply(result);
+                return; // Exit to avoid falling through to Gemini
+            } catch (error) {
+                console.error('Error sending "MAN UP?" response via Gemini:', error);
+                await message.reply('Oops! Something went wrong while generating the response.');
+                return;
+            }
+        }
+
+        // Custom handling for "ping"
+        else if (lowerCaseContent.includes('ping')) {
+            try {
+                // Generate a response using Gemini
+                const prompt = `You are a Discord bot. When a user tags you and says "ping", generate a funny, quick auto-responder message. Keep it short, no more than one line, to avoid clutter on the Discord server.`;
+                const result = await runGemini(prompt);
+                await message.reply(result);
+                return; // Exit to avoid falling through to Gemini
+            } catch (error) {
+                console.error('Error sending "ping" response via Gemini:', error);
+                await message.reply('Oops! Something went wrong while generating the response.');
+                return;
+            }
+        }
+
+        // Custom handling for "UP?"
+        else if (lowerCaseContent.includes('up?')) {
+            try {
+                // Generate a response using Gemini
+                const prompt = `You are a Discord bot. When a user tags you and says "UP?", generate a funny, relaxed auto-responder message. Keep it short, no more than one line, so it stays clean on the Discord server.`;
+                const result = await runGemini(prompt);
+                await message.reply(result);
+                return; // Exit to avoid falling through to Gemini
+            } catch (error) {
+                console.error('Error sending "UP?" response via Gemini:', error);
+                await message.reply('Oops! Something went wrong while generating the response.');
+                return;
+            }
         }
     }
     for (const keyword of keywords) {
