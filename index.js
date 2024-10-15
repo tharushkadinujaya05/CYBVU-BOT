@@ -112,7 +112,17 @@ client.on('messageCreate', async message => {
 
     // Convert the message content to lowercase for case-insensitive matching
     const lowerCaseContent = message.content.toLowerCase();
-
+    if (message.mentions.has(client.user.id) && lowerCaseContent.includes('man up?')) {
+        try {
+            // Send a custom cool vibe response
+            await message.reply("Yeah, I'm up! 😎 What's poppin'? Let's get it!");
+            return; // Exit the handler so it doesn't fall through to Gemini
+        } catch (error) {
+            console.error('Error sending custom response:', error);
+            await message.reply('Oops! Something went wrong while sending the custom reply.');
+            return;
+        }
+    }
     for (const keyword of keywords) {
         if (lowerCaseContent.includes(keyword)) {
             try {
