@@ -89,23 +89,31 @@ client.on('interactionCreate', async interaction => {
 });
 
 // Array of keywords to listen for
-const keywords = ['stfu', 'damn', 'come alive', 'gay', "for fuck's sake"]; // Add more keywords as needed
+const keywords = ['stfu', 'damn', 'come alive', 'gay', "for fuck's sake", "kill"]; 
 
 client.on('messageCreate', async message => {
-    console.log(`Received message: ${message.content}`); 
+    console.log(`Received message: ${message.content}`);
     if (message.author.bot) return; // Ignore bots
 
     // Convert the message content to lowercase for case-insensitive matching
     const lowerCaseContent = message.content.toLowerCase();
 
-    // Check if the message contains any of the keywords
     for (const keyword of keywords) {
         if (lowerCaseContent.includes(keyword)) {
-            // Acknowledge the message and pass it to the Gemini API
-            //const result = await runGemini(`Generate a funny autoresponder to someone saying "${keyword}" in a discord server, Here’s what he said: "${message.content}".  i am a discord bot programmed with gemini api song dont send me 2/3 line send one line at a time so reply will look clean on the server`); // Send the entire message content to Gemini
+            try {
+                const result = await runGemini(`You are a Discord bot in a computer faculty students server that gives funny autoreponders when detecting specific keywords in msgs. Write a funny autorespond message when the user sends the word "${keyword}". Please provide a single funny and chill reply with emojis. If the topic is sensitive or could be considered harassment, respond with a light-hearted joke instead. Don't give the finishReason: "SAFETY" error. Here’s the user complete message: "${message.content}". And don't send multiple messages; send one line at a time so the reply looks clean on the server.`); // Prompt engineering
+                await message.reply(result);
+            } catch (error) {
+                console.error('Error occurred while processing message:', error);
 
-            const result = await runGemini(`You are a Discord bot in a computer faculty students server that gives funny autoreponders when detecting specific keywords in msgs. write funny autorespond message when user send word "${keyword}", please provide a single funny and chill reply with emojis. If the topic is sensitive or could be considered harassment, respond with a light-hearted joke instead dont give the finsihReason: "SAFETY" error. Here’s the user complete message: "${message.content}". and dont send multiple msgs send one line at a time so reply will look clean on the server`); // promp eng
-            await message.reply(result);
+                // Check if the error is due to safety reasons
+                if (error.message.includes('SAFETY')) {
+                    // Send a generic safe response instead of crashing
+                    await message.reply('Haha, let’s keep things chill! 😅 How about a coding joke instead? 💻');
+                } else {
+                    await message.reply('Oops! Something went wrong while processing your message. Please try again later. 🤖');
+                }
+            }
             return; // Exit after responding to avoid multiple replies
         }
     }
