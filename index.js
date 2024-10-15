@@ -26,7 +26,7 @@ client.on('messageCreate', async message => {
     if (message.channel.type === ChannelType.DM) {
         console.log(`Received DM from ${message.author.tag}: ${message.content}`);
 
-        // AI Response using API
+        // AI Response using API in DM
         const result = await runGemini(message.content);
         message.reply(result);
  } 
@@ -36,7 +36,7 @@ client.on('messageCreate', async message => {
             const userId = message.author.id;
             console.log(`Received message in guild ${message.guild.name} from ${message.author.tag}: ${message.content}`);
             
-        // AI Response using API
+        // AI Response using API in Channels
         const result = await runGemini(message.content);
         message.reply(result);
         }
