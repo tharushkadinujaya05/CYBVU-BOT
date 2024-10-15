@@ -1,5 +1,6 @@
 require ('dotenv').config();
 const {Client, GatewayIntentBits, ChannelType, Partials} = require('discord.js');
+const {runGemini} = require('./gemini.js');
 
 const client = new Client({
     intents: [
@@ -24,17 +25,20 @@ client.on('messageCreate', async message => {
     if (message.author.bot) return; // Ignore bots
     if (message.channel.type === ChannelType.DM) {
         console.log(`Received DM from ${message.author.tag}: ${message.content}`);
-        message.reply('Hey There, How Can I Help You 🦦?');
 
         // AI Response using API
-        
+        const result = await runGemini(message.content);
+        message.reply(result);
  } 
     if (message.channel.type === ChannelType.GuildText) {
         if (!message.mentions.has(client.user.id)) return; // Ignore messages that didnt't mention the bot
         else {
             const userId = message.author.id;
             console.log(`Received message in guild ${message.guild.name} from ${message.author.tag}: ${message.content}`);
-            message.reply(`Hey There, <@${userId}> How Can I Help You 🦦?`);
+            
+        // AI Response using API
+        const result = await runGemini(message.content);
+        message.reply(result);
         }
     }
 });
