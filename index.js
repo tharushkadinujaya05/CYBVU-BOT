@@ -30,15 +30,27 @@ client.on('messageCreate', async message => {
         const result = await runGemini(message.content);
         message.reply(result);
  } 
+    // Handle Guild Messages
     if (message.channel.type === ChannelType.GuildText) {
-        if (!message.mentions.has(client.user.id)) return; // Ignore messages that didnt't mention the bot
-        else {
-            const userId = message.author.id;
-            console.log(`Received message in guild ${message.guild.name} from ${message.author.tag}: ${message.content}`);
-            
-        // AI Response using API in Channels
-        const result = await runGemini(message.content);
-        message.reply(result);
+        if (!message.mentions.has(client.user.id)) return; // Ignore messages that didn't mention the bot
+
+        // Check if the message is a reply to another message
+        const referencedMessage = message.reference
+            ? await message.channel.messages.fetch(message.reference.messageId)
+            : null;
+
+        if (referencedMessage) {
+            console.log(`Bot was tagged to a message reference in guild ${message.guild.name}`);
+            console.log(`Referenced message: ${referencedMessage.content}`);
+
+            // Use Gemini to process the referenced message
+            const result = await runGemini(referencedMessage.content);
+            message.reply(result);
+        } else {
+            console.log(`Received message without reference: ${message.content}`);
+            // Regular message handling, pass the current message to Gemini
+            const result = await runGemini(message.content);
+            message.reply(result);
         }
     }
 });
