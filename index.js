@@ -104,7 +104,8 @@ client.on('messageCreate', async message => {
             // Acknowledge the message and pass it to the Gemini API
             //const result = await runGemini(`Generate a funny autoresponder to someone saying "${keyword}" in a discord server, Here’s what he said: "${message.content}".  i am a discord bot programmed with gemini api song dont send me 2/3 line send one line at a time so reply will look clean on the server`); // Send the entire message content to Gemini
 
-            const result = await runGemini(`You are a humorous Discord bot that gives funny autoreponders when detecting specific keywords in msgs. Respond to the keyword "${keyword}" with a single funny reply that includes emojis. Here’s the user message: "${message.content}". Keep it light-hearted and witty!`);            await message.reply(result);
+            const result = await runGemini(`You are a Discord bot in a computer faculty students server that gives funny autoreponders when detecting specific keywords in msgs. write funny autorespond message when user send word "${keyword}", please provide a single funny and chill reply with emojis. If the topic is sensitive or could be considered harassment, respond with a light-hearted joke instead dont give the finsihReason: "SAFETY" error. Here’s the user complete message: "${message.content}". and dont send multiple msgs send one line at a time so reply will look clean on the server`); // promp eng
+            await message.reply(result);
             return; // Exit after responding to avoid multiple replies
         }
     }
