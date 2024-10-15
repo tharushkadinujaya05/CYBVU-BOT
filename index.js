@@ -89,7 +89,7 @@ client.on('interactionCreate', async interaction => {
 });
 
 // Array of keywords to listen for
-const keywords = ['stfu', 'damn', 'come alive', 'gay', "for fuck's sake", "kill"]; 
+const keywords = ['stfu', 'damn', 'come alive', 'gay', "for fuck's sake", "kill", "stupid", "deadline"]; 
 
 client.on('messageCreate', async message => {
     console.log(`Received message: ${message.content}`);
