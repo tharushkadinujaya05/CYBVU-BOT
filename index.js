@@ -186,19 +186,16 @@ client.on('interactionCreate', async interaction => {
         }
   
         // Define colors based on severity
-        let severityColor;
-        switch (severity) {
-          case 'Low':
-            severityColor = '#00ff00'; // Green for Low
-            break;
-          case 'Medium':
-            severityColor = '#ffff00'; // Yellow for Medium
-            break;
-          case 'High':
-            severityColor = '#ff0000'; // Red for High
-            break;
-          default:
-            severityColor = '#808080'; // Gray for undefined severity (shouldn't happen)
+        let embedColor;
+
+        if (severity === 'low') {
+          embedColor = '#00FF00'; // Green for low severity
+        } else if (severity === 'medium') {
+          embedColor = '#FFFF00'; // Yellow for medium severity
+        } else if (severity === 'high') {
+          embedColor = '#FF0000'; // Red for high severity
+        } else {
+          embedColor = '#000000'; // Default black if no severity is provided
         }
   
         // Create a link to the user's original message (the message they used the `/bug` command on)
@@ -206,7 +203,7 @@ client.on('interactionCreate', async interaction => {
   
         // Embed for the bug report
         const bugEmbed = new EmbedBuilder()
-          .setColor(severityColor) // Set color based on severity
+          .setColor(embedColor) // Set color based on severity
           .setTitle('Bug Report')
           .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
           .setTimestamp()
