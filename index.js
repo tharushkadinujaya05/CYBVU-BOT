@@ -103,42 +103,52 @@ client.on('interactionCreate', async interaction => {
             await interaction.editReply('Please attach a file to process.');
         }
     }
-
-    if (commandName === 'bug') {
-        const description = interaction.options.getString('description');
-
-        // Get the referenced message (if any)
-        const referencedMessage = interaction.message.reference
-            ? await interaction.channel.messages.fetch(interaction.message.reference.messageId)
-            : null;
-
-        // Find the #bot-bugs channel
-        const bugChannel = interaction.guild.channels.cache.find(channel => channel.name === 'bot-bugs');
-
-        if (bugChannel) {
-            try {
-                // Construct the bug report message
-                let bugReport = `**Bug Report from ${interaction.user.tag}:**\n${description}`;
-
-                // Add referenced message details if available
-                if (referencedMessage) {
-                    bugReport += `\n\n**Referenced Message: ** [Jump!](${referencedMessage.url})\n${referencedMessage.content}`; 
-                }
-
-                // Send the bug report
-                await bugChannel.send(bugReport);
-                await interaction.reply('Bug report submitted successfully! Thank you for your feedback.');
-
-            } catch (error) {
-                console.error('Error sending bug report:', error);
-                await interaction.reply('Oops! Something went wrong while submitting the bug report.');
-            }
-        } else {
-            await interaction.reply('I could not find a channel named #bot-bugs. Please make sure it exists.');
-        }
-    }
 });
+const { EmbedBuilder } = require('discord.js'); // Use EmbedBuilder instead of MessageEmbed for v14+
 
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isCommand()) return;
+
+  const { commandName, options } = interaction;
+
+  if (commandName === 'bug') {
+    let bugDescription = options.getString('description');
+    let referencedMessage = interaction.options.getMessage('message');
+    
+    // Create the embed
+    const bugEmbed = new EmbedBuilder() // Use EmbedBuilder
+      .setColor('#ff0000') // Red color for bugs
+      .setTitle('Bug Report')
+      .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() }) // Adding user profile pic and name
+      .setTimestamp();
+
+    // Case 1: Direct bug report
+    if (!referencedMessage) {
+      bugEmbed.setDescription(`**Bug Description:**\n${bugDescription}`);
+    }
+    
+    // Case 2: Referenced message bug report
+    else {
+      let messageLink = `https://discord.com/channels/${interaction.guild.id}/${referencedMessage.channel.id}/${referencedMessage.id}`;
+      
+      bugEmbed.setDescription(`**Bug Description:**\n${bugDescription}`)
+              .addFields(
+                { name: 'Reported Message', value: referencedMessage.content || 'No content' }, // Show the message content
+                { name: 'Message Link', value: `[Click Here](${messageLink})` }, // Provide link to the message
+                { name: 'Message Author', value: `${referencedMessage.author.tag}` } // Show the original author's name
+              );
+    }
+
+    // Send the embed to bot-bugs channel
+    let bugChannel = interaction.guild.channels.cache.find(c => c.name === 'bot-bugs');
+    if (bugChannel) {
+      await bugChannel.send({ embeds: [bugEmbed] });
+      await interaction.reply({ content: 'Bug report has been submitted successfully!', ephemeral: true });
+    } else {
+      await interaction.reply({ content: 'Could not find the bug report channel.', ephemeral: true });
+    }
+  }
+});
 const keywords = ['stfu', 'damn', 'come alive', 'gay', "for fuck's sake", "kill", "stupid", "deadline", "gn", "gm", "good night", "good morning", "tc", "fast", "asap"]; 
 
 client.on('messageCreate', async message => {
