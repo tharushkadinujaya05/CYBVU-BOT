@@ -116,37 +116,52 @@ client.on('interactionCreate', async interaction => {
       let bugDescription = options.getString('description');
       let referencedMessage = interaction.options.getMessage('message');
 
-      // Create the embed
+      // Send an initial confirmation to the user that the bug report is being processed
+      await interaction.reply({ content: 'Bug report is being submitted...', ephemeral: true });
+
+      // Send the bug report to #bot-bugs with the message link from the user's bug report message
+      const bugChannel = interaction.guild.channels.cache.find(c => c.name === 'bot-bugs');
+      if (!bugChannel) {
+        return await interaction.followUp({ content: 'Could not find the bug report channel.', ephemeral: true });
+      }
+
+      // Embed for the bug report
       const bugEmbed = new EmbedBuilder()
         .setColor('#ff0000') // Red color for bugs
         .setTitle('Bug Report')
         .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
-        .setTimestamp();
+        .setTimestamp()
+        .setDescription(`**Bug Description:**\n${bugDescription}`);
 
-      // Case 1: Direct bug report
-      if (!referencedMessage) {
-        bugEmbed.setDescription(`**Bug Description:**\n${bugDescription}`);
-      }
-      // Case 2: Referenced message bug report
-      else {
-        let messageLink = `https://discord.com/channels/${interaction.guild.id}/${referencedMessage.channel.id}/${referencedMessage.id}`;
+      // If the user replied to a message, add that message content to the embed
+      if (referencedMessage) {
+        let referencedMessageLink = `https://discord.com/channels/${interaction.guild.id}/${referencedMessage.channel.id}/${referencedMessage.id}`;
         
-        bugEmbed.setDescription(`**Bug Description:**\n${bugDescription}`)
-                .addFields(
-                  { name: 'Reported Message', value: referencedMessage.content || 'No content' },
-                  { name: 'Message Link', value: `[Click Here](${messageLink})` },
-                  { name: 'Message Author', value: `${referencedMessage.author.tag}` }
-                );
+        bugEmbed.addFields(
+          { name: 'Reported Message', value: referencedMessage.content || 'No content' },
+          { name: 'Message Link', value: `[Click Here to View Message](${referencedMessageLink})` },
+          { name: 'Message Author', value: `${referencedMessage.author.tag}` }
+        );
       }
 
-      // Send the embed to bot-bugs channel
-      let bugChannel = interaction.guild.channels.cache.find(c => c.name === 'bot-bugs');
-      if (bugChannel) {
-        await bugChannel.send({ embeds: [bugEmbed] });
-        await interaction.reply({ content: 'Bug report has been submitted successfully!', ephemeral: true });
-      } else {
-        await interaction.reply({ content: 'Could not find the bug report channel.', ephemeral: true });
-      }
+      // Send the bug report embed to the bug channel
+      const bugReportMessage = await bugChannel.send({ embeds: [bugEmbed] });
+
+      // Grab the link of the bug report message itself
+      const bugReportMessageLink = `https://discord.com/channels/${interaction.guild.id}/${bugChannel.id}/${bugReportMessage.id}`;
+
+      // Edit the embed to include a link to the bug report message for admins to review
+      await bugReportMessage.edit({
+        embeds: [
+          bugEmbed.addFields(
+            { name: 'Bug Report Link', value: `[Click Here to View Bug Report](${bugReportMessageLink})` }
+          )
+        ]
+      });
+
+      // Let the user know the bug report has been submitted
+      await interaction.followUp({ content: 'Bug report has been submitted successfully!', ephemeral: true });
+
     } catch (error) {
       console.error('Error handling bug report:', error);
 
