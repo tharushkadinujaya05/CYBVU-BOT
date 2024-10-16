@@ -190,19 +190,16 @@ client.on('interactionCreate', async interaction => {
         }
   
         // Define colors based on severity
-        let severityColor;
-        switch (severity) {
-          case 'Low':
-            severityColor = '#00ff00'; // Green for Low
-            break;
-          case 'Medium':
-            severityColor = '#ffff00'; // Yellow for Medium
-            break;
-          case 'High':
-            severityColor = '#ff0000'; // Red for High
-            break;
-          default:
-            severityColor = '#808080'; // Gray for undefined severity (shouldn't happen)
+        let embedColor;
+        
+        if (severity === 'low') {
+          embedColor = '#00FF00'; // Green for low severity
+        } else if (severity === 'medium') {
+          embedColor = '#FFFF00'; // Yellow for medium severity
+        } else if (severity === 'high') {
+          embedColor = '#FF0000'; // Red for high severity
+        } else {
+          embedColor = '#000000'; // Default black if no severity is provided
         }
   
         // Create a link to the user's original message (the message they used the `/bug` command on)
@@ -235,16 +232,16 @@ client.on('interactionCreate', async interaction => {
         await bugChannel.send({ embeds: [bugEmbed] });
   
         // Follow up with the user after the report has been submitted
-        await interaction.followUp({ content: 'Bug report has been submitted successfully!'});
+        await interaction.followUp({ content: 'Bug report has been submitted successfully!', ephemeral: true });
   
       } catch (error) {
         console.error('Error handling bug report:', error);
   
         // Handle specific error if it's related to the API being unavailable
         if (error.status === 503) {
-          await interaction.followUp({ content: 'The Discord service is currently unavailable. Please try again later.'});
+          await interaction.followUp({ content: 'The Discord service is currently unavailable. Please try again later.', ephemeral: true });
         } else {
-          await interaction.followUp({ content: 'An error occurred while submitting your bug report.'});
+          await interaction.followUp({ content: 'An error occurred while submitting your bug report.', ephemeral: true });
         }
       }
     }
