@@ -41,23 +41,61 @@ client.on('ready', async () => {
             .addStringOption(option => 
                 option.setName('prompt')
                     .setDescription('Prompt for processing the file')
-                    .setRequired(true)) 
+                    .setRequired(true))
             .addAttachmentOption(option => 
                 option.setName('file')
                     .setDescription('The file to be processed')
-                    .setRequired(true)), 
-            
-         // Add the /bug command here
-         new SlashCommandBuilder()
-         .setName('bug')
-         .setDescription('Report a bug in the bot')
-         .addStringOption(option =>
-             option.setName('description')
-                 .setDescription('Describe the bug you encountered')
-                 .setRequired(true))
+                    .setRequired(true)),
+
+        // /quizmode
+        new SlashCommandBuilder()
+            .setName('quizmode')
+            .setDescription('Generate a quiz from a file')
+            .addAttachmentOption(option =>
+                option.setName('file')
+                    .setDescription('Upload the file for the quiz')
+                    .setRequired(true))
+            .addIntegerOption(option =>
+                option.setName('questions')
+                    .setDescription('Number of questions to generate')
+                    .setRequired(true))
+            .addStringOption(option =>
+                option.setName('type')
+                    .setDescription('Type of quiz: MCQ or Essay')
+                    .addChoices(
+                        { name: 'MCQ', value: 'mcq' },
+                        { name: 'Essay', value: 'essay' }
+                    )
+                    .setRequired(true)),
+
+        // /slidesummarizer
+        new SlashCommandBuilder()
+            .setName('slidesummarizer')
+            .setDescription('Summarize a slide deck')
+            .addAttachmentOption(option =>
+                option.setName('file')
+                    .setDescription('Upload the file to summarize')
+                    .setRequired(true)),
+
+        // /bug with severity level
+        new SlashCommandBuilder()
+            .setName('bug')
+            .setDescription('Report a bug in the bot')
+            .addStringOption(option =>
+                option.setName('description')
+                    .setDescription('Describe the bug you encountered')
+                    .setRequired(true))
+            .addStringOption(option =>
+                option.setName('severity')
+                    .setDescription('Bug severity level')
+                    .addChoices(
+                        { name: 'Low', value: 'low' },
+                        { name: 'Medium', value: 'medium' },
+                        { name: 'High', value: 'high' }
+                    )
+                    .setRequired(true))
     ];
     
-
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
     try {
         await rest.put(
@@ -102,8 +140,29 @@ client.on('interactionCreate', async interaction => {
         } else {
             await interaction.editReply('Please attach a file to process.');
         }
-    }
+    } else if (commandName === 'slidesummarizer') {
+        const file = options.getAttachment('file');
+
+        await interaction.deferReply();
+
+        if (file) {
+            try {
+                const fileContent = await processFile(file);
+                if (fileContent) {
+                    const summaryPrompt = `Summarize the content slide by slide in a brief manner. Content: ${fileContent}`;
+                    const result = await runGemini(summaryPrompt);
+                    await interaction.editReply(result);
+                } else {
+                    await interaction.editReply('Unable to process the file.');
+                }
+            } catch (error) {
+                await interaction.editReply('An error occurred while summarizing the slides.');
+            }
+        }
+
+    } 
 });
+
 const { EmbedBuilder } = require('discord.js'); // Use EmbedBuilder for v14+
 
 client.on('interactionCreate', async interaction => {
@@ -114,7 +173,8 @@ client.on('interactionCreate', async interaction => {
     if (commandName === 'bug') {
       try {
         let bugDescription = options.getString('description');
-        let referencedMessage = interaction.options.getMessage('message'); // If user tagged a message
+        let referencedMessage = options.getMessage('message'); // If user tagged a message
+        let severity = options.getString('severity'); // Get the severity level
   
         // Defer the reply to avoid interaction timeout
         await interaction.deferReply({ ephemeral: true });
@@ -134,12 +194,11 @@ client.on('interactionCreate', async interaction => {
           .setTitle('Bug Report')
           .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
           .setTimestamp()
-          .setDescription(`**Bug Description:**\n${bugDescription}`);
-  
-        // Add the link to the user's command message so admins can jump to it
-        bugEmbed.addFields(
-          { name: 'User Command Message', value: `[Click Here to View User's Message](${userMessageLink})` }
-        );
+          .setDescription(`**Bug Description:**\n${bugDescription}`)
+          .addFields(
+            { name: 'Severity', value: severity, inline: true }, // Add the severity level to the embed
+            { name: 'User Command Message', value: `[Click Here to View User's Message](${userMessageLink})` }
+          );
   
         // If the user replied to a message, add that message content to the embed
         if (referencedMessage) {
@@ -169,7 +228,7 @@ client.on('interactionCreate', async interaction => {
         }
       }
     }
-  });
+});
 
 const keywords = ['stfu', 'damn', 'come alive', 'gay', "for fuck's sake", "kill", "stupid", "deadline", "gn", "gm", "good night", "good morning", "tc", "fast", "asap"]; 
 
@@ -297,6 +356,7 @@ client.on('messageCreate', async message => {
     }
 });
 
+// Helper function to split large responses
 function splitResponse(response) {
     const maxChunkLength = 2000;
     let chunks = [];
