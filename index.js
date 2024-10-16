@@ -4,6 +4,7 @@ const { runGemini } = require('./gemini.js');
 const { processFile } = require('./fileHandler.js'); 
 const express = require('express');
 
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -78,26 +79,26 @@ client.on('ready', async () => {
                     .setRequired(true)),
 
         // /bug with severity level and message tagging
-    new SlashCommandBuilder()
-    .setName('bug')
-    .setDescription('Report a bug in the bot')
-    .addStringOption(option =>
-        option.setName('description')
-            .setDescription('Describe the bug you encountered')
-            .setRequired(true))
-    .addStringOption(option =>
-        option.setName('severity')
-            .setDescription('Bug severity level')
-            .addChoices(
-                { name: 'Low', value: 'low' },
-                { name: 'Medium', value: 'medium' },
-                { name: 'High', value: 'high' }
-            )
-            .setRequired(true))
-    .addMessageOption(option => // Add this line
-        option.setName('message')
-            .setDescription('Tag a message for reference')
-            .setRequired(false))
+        new SlashCommandBuilder()
+        .setName('bug')
+        .setDescription('Report a bug in the bot')
+        .addStringOption(option =>
+            option.setName('description')
+                .setDescription('Describe the bug you encountered')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('severity')
+                .setDescription('Bug severity level')
+                .addChoices(
+                    { name: 'Low', value: 'low' },
+                    { name: 'Medium', value: 'medium' },
+                    { name: 'High', value: 'high' }
+                )
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('message_id')
+                .setDescription('Message ID for reference (optional)')
+                .setRequired(false))
         ];
     
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
