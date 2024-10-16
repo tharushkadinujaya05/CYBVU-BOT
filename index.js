@@ -80,21 +80,25 @@ client.on('ready', async () => {
         // /bug with severity level
         new SlashCommandBuilder()
             .setName('bug')
-            .setDescription('Report a bug in the bot')
+            .setDescription('Submit a bug report')
             .addStringOption(option =>
-                option.setName('description')
-                    .setDescription('Describe the bug you encountered')
-                    .setRequired(true))
+            option.setName('description')
+                .setDescription('Describe the bug')
+                .setRequired(true))
             .addStringOption(option =>
-                option.setName('severity')
-                    .setDescription('Bug severity level')
-                    .addChoices(
-                        { name: 'Low', value: 'low' },
-                        { name: 'Medium', value: 'medium' },
-                        { name: 'High', value: 'high' }
-                    )
-                    .setRequired(true))
-    ];
+            option.setName('severity')
+                .setDescription('Set the severity level of the bug')
+                .setRequired(true)
+                .addChoices(
+                { name: 'Low', value: 'low' },
+                { name: 'Medium', value: 'medium' },
+                { name: 'High', value: 'high' }
+                ))
+            .addMessageOption(option =>
+            option.setName('message')
+                .setDescription('Tag a message for reference')
+                .setRequired(false))
+        ];
     
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
     try {
@@ -231,16 +235,16 @@ client.on('interactionCreate', async interaction => {
         await bugChannel.send({ embeds: [bugEmbed] });
   
         // Follow up with the user after the report has been submitted
-        await interaction.followUp({ content: 'Bug report has been submitted successfully!', ephemeral: false });
+        await interaction.followUp({ content: 'Bug report has been submitted successfully!'});
   
       } catch (error) {
         console.error('Error handling bug report:', error);
   
         // Handle specific error if it's related to the API being unavailable
         if (error.status === 503) {
-          await interaction.followUp({ content: 'The Discord service is currently unavailable. Please try again later.', ephemeral: false });
+          await interaction.followUp({ content: 'The Discord service is currently unavailable. Please try again later.'});
         } else {
-          await interaction.followUp({ content: 'An error occurred while submitting your bug report.', ephemeral: false });
+          await interaction.followUp({ content: 'An error occurred while submitting your bug report.'});
         }
       }
     }
