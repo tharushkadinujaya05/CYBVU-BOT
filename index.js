@@ -114,7 +114,7 @@ client.on('interactionCreate', async interaction => {
     if (commandName === 'bug') {
       try {
         let bugDescription = options.getString('description');
-        let referencedMessage = interaction.options.getMessage('message');
+        let referencedMessage = interaction.options.getMessage('message'); // If user tagged a message
   
         // Defer the reply to avoid interaction timeout
         await interaction.deferReply({ ephemeral: true });
@@ -125,6 +125,9 @@ client.on('interactionCreate', async interaction => {
           return await interaction.followUp({ content: 'Could not find the bug report channel.', ephemeral: true });
         }
   
+        // Create a link to the user's original message (the message they used the `/bug` command on)
+        let userMessageLink = `https://discord.com/channels/${interaction.guild.id}/${interaction.channel.id}/${interaction.id}`;
+  
         // Embed for the bug report
         const bugEmbed = new EmbedBuilder()
           .setColor('#ff0000') // Red color for bugs
@@ -133,31 +136,24 @@ client.on('interactionCreate', async interaction => {
           .setTimestamp()
           .setDescription(`**Bug Description:**\n${bugDescription}`);
   
+        // Add the link to the user's command message so admins can jump to it
+        bugEmbed.addFields(
+          { name: 'User Command Message', value: `[Click Here to View User's Message](${userMessageLink})` }
+        );
+  
         // If the user replied to a message, add that message content to the embed
         if (referencedMessage) {
           let referencedMessageLink = `https://discord.com/channels/${interaction.guild.id}/${referencedMessage.channel.id}/${referencedMessage.id}`;
           
           bugEmbed.addFields(
             { name: 'Reported Message', value: referencedMessage.content || 'No content' },
-            { name: 'Message Link', value: `[Click Here to View Message](${referencedMessageLink})` },
+            { name: 'Message Link', value: `[Click Here to View Reported Message](${referencedMessageLink})` },
             { name: 'Message Author', value: `${referencedMessage.author.tag}` }
           );
         }
   
         // Send the bug report embed to the bug channel
-        const bugReportMessage = await bugChannel.send({ embeds: [bugEmbed] });
-  
-        // Grab the link of the bug report message itself
-        const bugReportMessageLink = `https://discord.com/channels/${interaction.guild.id}/${bugChannel.id}/${bugReportMessage.id}`;
-  
-        // Edit the embed to include a link to the bug report message for admins to review
-        await bugReportMessage.edit({
-          embeds: [
-            bugEmbed.addFields(
-              { name: 'Bug Report Link', value: `[Click Here to View Bug Report](${bugReportMessageLink})` }
-            )
-          ]
-        });
+        await bugChannel.send({ embeds: [bugEmbed] });
   
         // Follow up with the user after the report has been submitted
         await interaction.followUp({ content: 'Bug report has been submitted successfully!', ephemeral: true });
@@ -174,7 +170,7 @@ client.on('interactionCreate', async interaction => {
       }
     }
   });
-  
+
 const keywords = ['stfu', 'damn', 'come alive', 'gay', "for fuck's sake", "kill", "stupid", "deadline", "gn", "gm", "good night", "good morning", "tc", "fast", "asap"]; 
 
 client.on('messageCreate', async message => {
