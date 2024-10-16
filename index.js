@@ -140,7 +140,8 @@ client.on('messageCreate', async message => {
     }
 
     for (const keyword of keywords) {
-        if (lowerCaseContent.includes(keyword)) {
+        const regex = new RegExp(`\\b${keyword}\\b`, 'i'); 
+        if (regex.test(lowerCaseContent)) {
             try {
                 const result = await runGemini(`You are a Discord bot in a computer faculty students server that gives funny autoreponders when detecting specific keywords in msgs. Write a funny autorespond message when the user sends the word "${keyword}". Please provide a single funny and chill reply with emojis. If the topic is sensitive or could be considered harassment, respond with a light-hearted joke instead. Don't give the finishReason: "SAFETY" error. Here’s the user complete message: "${message.content}". And don't send multiple messages; send one line at a time so the reply looks clean on the server.`); 
                 await message.reply(result);
