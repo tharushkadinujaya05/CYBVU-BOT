@@ -77,23 +77,27 @@ client.on('ready', async () => {
                     .setDescription('Upload the file to summarize')
                     .setRequired(true)),
 
-        // /bug with severity level
-        new SlashCommandBuilder()
-            .setName('bug')
-            .setDescription('Report a bug in the bot')
-            .addStringOption(option =>
-                option.setName('description')
-                    .setDescription('Describe the bug you encountered')
-                    .setRequired(true))
-            .addStringOption(option =>
-                option.setName('severity')
-                    .setDescription('Bug severity level')
-                    .addChoices(
-                        { name: 'Low', value: 'low' },
-                        { name: 'Medium', value: 'medium' },
-                        { name: 'High', value: 'high' }
-                    )
-                    .setRequired(true))
+        // /bug with severity level and message tagging
+    new SlashCommandBuilder()
+    .setName('bug')
+    .setDescription('Report a bug in the bot')
+    .addStringOption(option =>
+        option.setName('description')
+            .setDescription('Describe the bug you encountered')
+            .setRequired(true))
+    .addStringOption(option =>
+        option.setName('severity')
+            .setDescription('Bug severity level')
+            .addChoices(
+                { name: 'Low', value: 'low' },
+                { name: 'Medium', value: 'medium' },
+                { name: 'High', value: 'high' }
+            )
+            .setRequired(true))
+    .addMessageOption(option => // Add this line
+        option.setName('message')
+            .setDescription('Tag a message for reference')
+            .setRequired(false))
         ];
     
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
@@ -167,79 +171,69 @@ const { EmbedBuilder } = require('discord.js'); // Use EmbedBuilder for v14+
 
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
-  
-    const { commandName, options } = interaction;
-  
-    if (commandName === 'bug') {
-      try {
-        let bugDescription = options.getString('description');
-        let referencedMessage = options.getMessage('message'); // If user tagged a message
-        let severity = options.getString('severity'); // Get the severity level
-  
-        // Defer the reply to avoid interaction timeout
-        await interaction.deferReply({ ephemeral: true });
-  
-        // Send the bug report to #bot-bugs with the message link from the user's bug report message
-        const bugChannel = interaction.guild.channels.cache.find(c => c.name === 'bot-bugs');
-        if (!bugChannel) {
-          return await interaction.followUp({ content: 'Could not find the bug report channel.', ephemeral: true });
-        }
-  
-        // Define colors based on severity
-        let embedColor;
 
-        if (severity === 'low') {
-          embedColor = '#00FF00'; // Green for low severity
-        } else if (severity === 'medium') {
-          embedColor = '#FFFF00'; // Yellow for medium severity
-        } else if (severity === 'high') {
-          embedColor = '#FF0000'; // Red for high severity
-        } else {
-          embedColor = '#000000'; // Default black if no severity is provided
+    const { commandName, options } = interaction;
+
+    if (commandName === 'bug') {
+        try {
+            let bugDescription = options.getString('description');
+            let referencedMessage = options.getMessage('message'); // Get the tagged message
+            let severity = options.getString('severity');
+
+            await interaction.deferReply({ ephemeral: true });
+
+            const bugChannel = interaction.guild.channels.cache.find(c => c.name === 'bot-bugs');
+            if (!bugChannel) {
+                return await interaction.followUp({ content: 'Could not find the bug report channel.' });
+            }
+
+            let embedColor;
+
+            if (severity === 'low') {
+                embedColor = '#00FF00'; // Green
+            } else if (severity === 'medium') {
+                embedColor = '#FFFF00'; // Yellow
+            } else if (severity === 'high') {
+                embedColor = '#FF0000'; // Red
+            } else {
+                embedColor = '#000000'; // Default
+            }
+
+            let userMessageLink = `https://discord.com/channels/${interaction.guild.id}/${interaction.channel.id}/${interaction.id}`;
+
+            const bugEmbed = new EmbedBuilder()
+                .setColor(embedColor)
+                .setTitle('Bug Report')
+                .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
+                .setTimestamp()
+                .setDescription(`**Bug Description:**\n${bugDescription}`)
+                .addFields(
+                    { name: 'Severity', value: severity, inline: true },
+                    { name: 'User Command Message', value: `[Click Here to View User's Message](${userMessageLink})` }
+                );
+
+            // If the user replied to a message, add that message content to the embed
+            if (referencedMessage) {
+                let referencedMessageLink = `https://discord.com/channels/${interaction.guild.id}/${referencedMessage.channel.id}/${referencedMessage.id}`;
+                
+                bugEmbed.addFields(
+                    { name: 'Reported Message', value: referencedMessage.content || 'No content' },
+                    { name: 'Message Link', value: `[Click Here to View Reported Message](${referencedMessageLink})` },
+                    { name: 'Message Author', value: `${referencedMessage.author.tag}` }
+                );
+            }
+
+            await bugChannel.send({ embeds: [bugEmbed] });
+            await interaction.followUp({ content: 'Bug report has been submitted successfully!' });
+
+        } catch (error) {
+            console.error('Error handling bug report:', error);
+            if (error.status === 503) {
+                await interaction.followUp({ content: 'The Discord service is currently unavailable. Please try again later.' });
+            } else {
+                await interaction.followUp({ content: 'An error occurred while submitting your bug report.' });
+            }
         }
-  
-        // Create a link to the user's original message (the message they used the `/bug` command on)
-        let userMessageLink = `https://discord.com/channels/${interaction.guild.id}/${interaction.channel.id}/${interaction.id}`;
-  
-        // Embed for the bug report
-        const bugEmbed = new EmbedBuilder()
-          .setColor(embedColor) // Set color based on severity
-          .setTitle('Bug Report')
-          .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
-          .setTimestamp()
-          .setDescription(`**Bug Description:**\n${bugDescription}`)
-          .addFields(
-            { name: 'Severity', value: severity, inline: true }, // Add the severity level to the embed
-            { name: 'User Command Message', value: `[Click Here to View User's Message](${userMessageLink})` }
-          );
-  
-        // If the user replied to a message, add that message content to the embed
-        if (referencedMessage) {
-          let referencedMessageLink = `https://discord.com/channels/${interaction.guild.id}/${referencedMessage.channel.id}/${referencedMessage.id}`;
-          
-          bugEmbed.addFields(
-            { name: 'Reported Message', value: referencedMessage.content || 'No content' },
-            { name: 'Message Link', value: `[Click Here to View Reported Message](${referencedMessageLink})` },
-            { name: 'Message Author', value: `${referencedMessage.author.tag}` }
-          );
-        }
-  
-        // Send the bug report embed to the bug channel
-        await bugChannel.send({ embeds: [bugEmbed] });
-  
-        // Follow up with the user after the report has been submitted
-        await interaction.followUp({ content: 'Bug report has been submitted successfully!', ephemeral: true });
-  
-      } catch (error) {
-        console.error('Error handling bug report:', error);
-  
-        // Handle specific error if it's related to the API being unavailable
-        if (error.status === 503) {
-          await interaction.followUp({ content: 'The Discord service is currently unavailable. Please try again later.', ephemeral: true });
-        } else {
-          await interaction.followUp({ content: 'An error occurred while submitting your bug report.', ephemeral: true });
-        }
-      }
     }
 });
 
