@@ -224,7 +224,7 @@ function splitResponse(response) {
     const maxChunkLength = 2000;
     let chunks = [];
     for (let i = 0; i < response.length; i += maxChunkLength) {
-        chunks.push(response.slice(i, i + maxChunkLength));
+        chunks.push(response.substring(i, i + maxChunkLength));
     }
     return chunks;
 }
