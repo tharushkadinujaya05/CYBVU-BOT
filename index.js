@@ -46,7 +46,17 @@ client.on('ready', async () => {
                 option.setName('file')
                     .setDescription('The file to be processed')
                     .setRequired(true)), 
+            
+         // Add the /bug command here
+         new SlashCommandBuilder()
+         .setName('bug')
+         .setDescription('Report a bug in the bot')
+         .addStringOption(option =>
+             option.setName('description')
+                 .setDescription('Describe the bug you encountered')
+                 .setRequired(true))
     ];
+    
 
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
     try {
@@ -91,6 +101,26 @@ client.on('interactionCreate', async interaction => {
             }
         } else {
             await interaction.editReply('Please attach a file to process.');
+        }
+    }
+
+    if (commandName === 'bug') {
+        const description = interaction.options.getString('description');
+
+        // Find the #bot-bugs channel
+        const bugChannel = interaction.guild.channels.cache.find(channel => channel.name === 'bot-bugs'); 
+
+        if (bugChannel) {
+            try {
+                // Send the bug report to the #bot-bugs channel
+                await bugChannel.send(`**Bug Report from ${interaction.user.tag}:**\n${description}`); 
+                await interaction.reply('Bug report submitted successfully! Thank you for your feedback.');
+            } catch (error) {
+                console.error('Error sending bug report:', error);
+                await interaction.reply('Oops! Something went wrong while submitting the bug report.');
+            }
+        } else {
+            await interaction.reply('I could not find a channel named #bot-bugs. Please make sure it exists.');
         }
     }
 });
