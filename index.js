@@ -79,25 +79,25 @@ client.on('ready', async () => {
 
         // /bug with severity level
         new SlashCommandBuilder()
-            .setName('bug')
-            .setDescription('Submit a bug report')
-            .addStringOption(option =>
-            option.setName('description')
-                .setDescription('Describe the bug')
-                .setRequired(true))
-            .addStringOption(option =>
-            option.setName('severity')
-                .setDescription('Set the severity level of the bug')
-                .setRequired(true)
-                .addChoices(
+    .setName('bug')
+    .setDescription('Submit a bug report')
+    .addStringOption(option =>
+        option.setName('description')
+            .setDescription('Describe the bug')
+            .setRequired(true))
+    .addStringOption(option =>
+        option.setName('severity')
+            .setDescription('Set the severity level of the bug')
+            .setRequired(true)
+            .addChoices(
                 { name: 'Low', value: 'low' },
                 { name: 'Medium', value: 'medium' },
                 { name: 'High', value: 'high' }
-                ))
-            .addMessageOption(option =>
-            option.setName('message')
-                .setDescription('Tag a message for reference')
-                .setRequired(false))
+            ))
+    .addStringOption(option =>
+        option.setName('message')
+            .setDescription('Message link or reference (optional)')
+            .setRequired(false))
         ];
     
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
