@@ -107,14 +107,28 @@ client.on('interactionCreate', async interaction => {
     if (commandName === 'bug') {
         const description = interaction.options.getString('description');
 
+        // Get the referenced message (if any)
+        const referencedMessage = interaction.message.reference
+            ? await interaction.channel.messages.fetch(interaction.message.reference.messageId)
+            : null;
+
         // Find the #bot-bugs channel
-        const bugChannel = interaction.guild.channels.cache.find(channel => channel.name === 'bot-bugs'); 
+        const bugChannel = interaction.guild.channels.cache.find(channel => channel.name === 'bot-bugs');
 
         if (bugChannel) {
             try {
-                // Send the bug report to the #bot-bugs channel
-                await bugChannel.send(`**Bug Report from ${interaction.user.tag}:**\n${description}`); 
+                // Construct the bug report message
+                let bugReport = `**Bug Report from ${interaction.user.tag}:**\n${description}`;
+
+                // Add referenced message details if available
+                if (referencedMessage) {
+                    bugReport += `\n\n**Referenced Message: ** [Jump!](${referencedMessage.url})\n${referencedMessage.content}`; 
+                }
+
+                // Send the bug report
+                await bugChannel.send(bugReport);
                 await interaction.reply('Bug report submitted successfully! Thank you for your feedback.');
+
             } catch (error) {
                 console.error('Error sending bug report:', error);
                 await interaction.reply('Oops! Something went wrong while submitting the bug report.');
