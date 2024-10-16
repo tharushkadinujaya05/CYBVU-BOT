@@ -185,12 +185,28 @@ client.on('interactionCreate', async interaction => {
           return await interaction.followUp({ content: 'Could not find the bug report channel.', ephemeral: true });
         }
   
+        // Define colors based on severity
+        let severityColor;
+        switch (severity) {
+          case 'Low':
+            severityColor = '#00ff00'; // Green for Low
+            break;
+          case 'Medium':
+            severityColor = '#ffff00'; // Yellow for Medium
+            break;
+          case 'High':
+            severityColor = '#ff0000'; // Red for High
+            break;
+          default:
+            severityColor = '#808080'; // Gray for undefined severity (shouldn't happen)
+        }
+  
         // Create a link to the user's original message (the message they used the `/bug` command on)
         let userMessageLink = `https://discord.com/channels/${interaction.guild.id}/${interaction.channel.id}/${interaction.id}`;
   
         // Embed for the bug report
         const bugEmbed = new EmbedBuilder()
-          .setColor('#ff0000') // Red color for bugs
+          .setColor(severityColor) // Set color based on severity
           .setTitle('Bug Report')
           .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
           .setTimestamp()
@@ -215,16 +231,16 @@ client.on('interactionCreate', async interaction => {
         await bugChannel.send({ embeds: [bugEmbed] });
   
         // Follow up with the user after the report has been submitted
-        await interaction.followUp({ content: 'Bug report has been submitted successfully!', ephemeral: true });
+        await interaction.followUp({ content: 'Bug report has been submitted successfully!', ephemeral: false });
   
       } catch (error) {
         console.error('Error handling bug report:', error);
   
         // Handle specific error if it's related to the API being unavailable
         if (error.status === 503) {
-          await interaction.followUp({ content: 'The Discord service is currently unavailable. Please try again later.', ephemeral: true });
+          await interaction.followUp({ content: 'The Discord service is currently unavailable. Please try again later.', ephemeral: false });
         } else {
-          await interaction.followUp({ content: 'An error occurred while submitting your bug report.', ephemeral: true });
+          await interaction.followUp({ content: 'An error occurred while submitting your bug report.', ephemeral: false });
         }
       }
     }
