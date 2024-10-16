@@ -104,7 +104,7 @@ client.on('interactionCreate', async interaction => {
         }
     }
 });
-const { EmbedBuilder } = require('discord.js'); // Use EmbedBuilder instead of MessageEmbed for v14+
+const { EmbedBuilder } = require('discord.js'); // Use EmbedBuilder for v14+
 
 client.on('interactionCreate', async interaction => {
   if (!interaction.isCommand()) return;
@@ -112,43 +112,54 @@ client.on('interactionCreate', async interaction => {
   const { commandName, options } = interaction;
 
   if (commandName === 'bug') {
-    let bugDescription = options.getString('description');
-    let referencedMessage = interaction.options.getMessage('message');
-    
-    // Create the embed
-    const bugEmbed = new EmbedBuilder() // Use EmbedBuilder
-      .setColor('#ff0000') // Red color for bugs
-      .setTitle('Bug Report')
-      .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() }) // Adding user profile pic and name
-      .setTimestamp();
+    try {
+      let bugDescription = options.getString('description');
+      let referencedMessage = interaction.options.getMessage('message');
 
-    // Case 1: Direct bug report
-    if (!referencedMessage) {
-      bugEmbed.setDescription(`**Bug Description:**\n${bugDescription}`);
-    }
-    
-    // Case 2: Referenced message bug report
-    else {
-      let messageLink = `https://discord.com/channels/${interaction.guild.id}/${referencedMessage.channel.id}/${referencedMessage.id}`;
-      
-      bugEmbed.setDescription(`**Bug Description:**\n${bugDescription}`)
-              .addFields(
-                { name: 'Reported Message', value: referencedMessage.content || 'No content' }, // Show the message content
-                { name: 'Message Link', value: `[Click Here](${messageLink})` }, // Provide link to the message
-                { name: 'Message Author', value: `${referencedMessage.author.tag}` } // Show the original author's name
-              );
-    }
+      // Create the embed
+      const bugEmbed = new EmbedBuilder()
+        .setColor('#ff0000') // Red color for bugs
+        .setTitle('Bug Report')
+        .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
+        .setTimestamp();
 
-    // Send the embed to bot-bugs channel
-    let bugChannel = interaction.guild.channels.cache.find(c => c.name === 'bot-bugs');
-    if (bugChannel) {
-      await bugChannel.send({ embeds: [bugEmbed] });
-      await interaction.reply({ content: 'Bug report has been submitted successfully!', ephemeral: true });
-    } else {
-      await interaction.reply({ content: 'Could not find the bug report channel.', ephemeral: true });
+      // Case 1: Direct bug report
+      if (!referencedMessage) {
+        bugEmbed.setDescription(`**Bug Description:**\n${bugDescription}`);
+      }
+      // Case 2: Referenced message bug report
+      else {
+        let messageLink = `https://discord.com/channels/${interaction.guild.id}/${referencedMessage.channel.id}/${referencedMessage.id}`;
+        
+        bugEmbed.setDescription(`**Bug Description:**\n${bugDescription}`)
+                .addFields(
+                  { name: 'Reported Message', value: referencedMessage.content || 'No content' },
+                  { name: 'Message Link', value: `[Click Here](${messageLink})` },
+                  { name: 'Message Author', value: `${referencedMessage.author.tag}` }
+                );
+      }
+
+      // Send the embed to bot-bugs channel
+      let bugChannel = interaction.guild.channels.cache.find(c => c.name === 'bot-bugs');
+      if (bugChannel) {
+        await bugChannel.send({ embeds: [bugEmbed] });
+        await interaction.reply({ content: 'Bug report has been submitted successfully!', ephemeral: true });
+      } else {
+        await interaction.reply({ content: 'Could not find the bug report channel.', ephemeral: true });
+      }
+    } catch (error) {
+      console.error('Error handling bug report:', error);
+
+      // Handle specific error if it's related to the API being unavailable
+      if (error.status === 503) {
+        await interaction.reply({ content: 'The Discord service is currently unavailable. Please try again later.', ephemeral: true });
+      } else {
+        await interaction.reply({ content: 'An error occurred while submitting your bug report.', ephemeral: true });
+      }
     }
   }
 });
+
 const keywords = ['stfu', 'damn', 'come alive', 'gay', "for fuck's sake", "kill", "stupid", "deadline", "gn", "gm", "good night", "good morning", "tc", "fast", "asap"]; 
 
 client.on('messageCreate', async message => {
