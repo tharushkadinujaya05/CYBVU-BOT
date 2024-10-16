@@ -79,25 +79,21 @@ client.on('ready', async () => {
 
         // /bug with severity level
         new SlashCommandBuilder()
-    .setName('bug')
-    .setDescription('Submit a bug report')
-    .addStringOption(option =>
-        option.setName('description')
-            .setDescription('Describe the bug')
-            .setRequired(true))
-    .addStringOption(option =>
-        option.setName('severity')
-            .setDescription('Set the severity level of the bug')
-            .setRequired(true)
-            .addChoices(
-                { name: 'Low', value: 'low' },
-                { name: 'Medium', value: 'medium' },
-                { name: 'High', value: 'high' }
-            ))
-    .addStringOption(option =>
-        option.setName('message')
-            .setDescription('Message link or reference (optional)')
-            .setRequired(false))
+            .setName('bug')
+            .setDescription('Report a bug in the bot')
+            .addStringOption(option =>
+                option.setName('description')
+                    .setDescription('Describe the bug you encountered')
+                    .setRequired(true))
+            .addStringOption(option =>
+                option.setName('severity')
+                    .setDescription('Bug severity level')
+                    .addChoices(
+                        { name: 'Low', value: 'low' },
+                        { name: 'Medium', value: 'medium' },
+                        { name: 'High', value: 'high' }
+                    )
+                    .setRequired(true))
         ];
     
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
@@ -190,16 +186,19 @@ client.on('interactionCreate', async interaction => {
         }
   
         // Define colors based on severity
-        let embedColor;
-        
-        if (severity === 'low') {
-          embedColor = '#00FF00'; // Green for low severity
-        } else if (severity === 'medium') {
-          embedColor = '#FFFF00'; // Yellow for medium severity
-        } else if (severity === 'high') {
-          embedColor = '#FF0000'; // Red for high severity
-        } else {
-          embedColor = '#000000'; // Default black if no severity is provided
+        let severityColor;
+        switch (severity) {
+          case 'Low':
+            severityColor = '#00ff00'; // Green for Low
+            break;
+          case 'Medium':
+            severityColor = '#ffff00'; // Yellow for Medium
+            break;
+          case 'High':
+            severityColor = '#ff0000'; // Red for High
+            break;
+          default:
+            severityColor = '#808080'; // Gray for undefined severity (shouldn't happen)
         }
   
         // Create a link to the user's original message (the message they used the `/bug` command on)
