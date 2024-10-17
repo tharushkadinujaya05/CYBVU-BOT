@@ -76,7 +76,7 @@ client.on('ready', async () => {
                     .setDescription('Upload the file to summarize')
                     .setRequired(true)),
 
-        // /bug with severity level
+        // /bug with severity level and optional message link
         new SlashCommandBuilder()
             .setName('bug')
             .setDescription('Report a bug in the bot')
@@ -93,6 +93,10 @@ client.on('ready', async () => {
                         { name: 'High', value: 'high' }
                     )
                     .setRequired(true))
+            .addStringOption(option =>
+                option.setName('message_link')
+                    .setDescription('Optional: Paste the link to the message you are referencing.')
+                    .setRequired(false)) 
         ];
     
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
@@ -172,13 +176,13 @@ client.on('interactionCreate', async interaction => {
     if (commandName === 'bug') {
         try {
             let bugDescription = options.getString('description');
-            let referencedMessage = options.getMessage('message'); // If user tagged a message
             let severity = options.getString('severity'); // Get the severity level
+            let referencedMessageLink = options.getString('message_link'); // Get the optional message link
 
             // Defer the reply to avoid interaction timeout
-            await interaction.deferReply();
+            await interaction.deferReply({ ephemeral: false });
 
-            // Send the bug report to #bot-bugs with the message link from the user's bug report message
+            // Send the bug report to #bot-bugs
             const bugChannel = interaction.guild.channels.cache.find(c => c.name === 'bot-bugs');
             if (!bugChannel) {
                 return await interaction.followUp({ content: 'Could not find the bug report channel.' });
@@ -186,18 +190,17 @@ client.on('interactionCreate', async interaction => {
 
             // Define colors based on severity
             let embedColor;
-
             if (severity === 'low') {
-                embedColor = '#00FF00'; // Green for low severity
+                embedColor = '#00FF00';
             } else if (severity === 'medium') {
-                embedColor = '#FFFF00'; // Yellow for medium severity
+                embedColor = '#FFFF00';
             } else if (severity === 'high') {
-                embedColor = '#FF0000'; // Red for high severity
+                embedColor = '#FF0000'; 
             } else {
-                embedColor = '#000000'; // Default black if no severity is provided
+                embedColor = '#000000'; 
             }
 
-            // Embed for the bug report
+            // Create a bug report embed
             const bugEmbed = new EmbedBuilder()
                 .setColor(embedColor) // Set color based on severity
                 .setTitle('Bug Report')
@@ -206,22 +209,26 @@ client.on('interactionCreate', async interaction => {
                 .setDescription(`**Bug Description:**\n${bugDescription}`)
                 .addFields({ name: 'Severity', value: severity, inline: true });
 
-            // If the user referenced a message, add the message content and URL
-            if (referencedMessage) {
-                let referencedMessageUrl = referencedMessage.url; // Get the referenced message's URL directly
-
+            // If the user provided a referenced message link, include it
+            if (referencedMessageLink) {
                 bugEmbed.addFields(
-                    { name: 'Reported Message', value: referencedMessage.content || 'No content' },
-                    { name: 'Message Link', value: `[Click Here to View Reported Message](${referencedMessageUrl})` },
-                    { name: 'Message Author', value: `${referencedMessage.author.tag}` }
+                    { name: '🔗 Message Link', value: `${referencedMessageLink} ` }
                 );
             }
 
+            // Send confirmation message to the user
+            const confirmationMessage = await interaction.followUp({ content: 'Bug report has been submitted successfully!' });
+
+            // Get the URL of the confirmation message (bot's response)
+            let confirmationMessageUrl = `https://discord.com/channels/${interaction.guild.id}/${interaction.channel.id}/${confirmationMessage.id}`;
+
+            // Add the bot's confirmation message URL to the bug report embed
+            bugEmbed.addFields(
+                { name: '💬 Confirmation Message', value: `[Click Here to View Confirmation Message](${confirmationMessageUrl})` }
+            );
+
             // Send the bug report embed to the bug channel
             await bugChannel.send({ embeds: [bugEmbed] });
-
-            // Follow up with the user after the report has been submitted
-            await interaction.followUp({ content: 'Bug report has been submitted successfully!' });
 
         } catch (error) {
             console.error('Error handling bug report:', error);
