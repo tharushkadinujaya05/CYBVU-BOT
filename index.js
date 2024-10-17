@@ -218,7 +218,7 @@ client.on('interactionCreate', async interaction => {
           
           bugEmbed.addFields(
             { name: 'Reported Message', value: referencedMessage.content || 'No content' },
-            { name: 'Message Link', value: `[Click Here to View Reported Message](${referencedMessageLink})` },
+            { name: 'Message Link', value: `(${referencedMessageLink})` },
             { name: 'Message Author', value: `${referencedMessage.author.tag}` }
           );
         }
