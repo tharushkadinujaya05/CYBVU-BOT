@@ -197,9 +197,6 @@ client.on('interactionCreate', async interaction => {
                 embedColor = '#000000'; // Default black if no severity is provided
             }
 
-            // Get the message URL directly using message.url
-            let userMessageUrl = interaction.message.url; // This is the interaction message's URL
-
             // Embed for the bug report
             const bugEmbed = new EmbedBuilder()
                 .setColor(embedColor) // Set color based on severity
@@ -207,12 +204,9 @@ client.on('interactionCreate', async interaction => {
                 .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
                 .setTimestamp()
                 .setDescription(`**Bug Description:**\n${bugDescription}`)
-                .addFields(
-                    { name: 'Severity', value: severity, inline: true }, // Add the severity level to the embed
-                    { name: 'User Command Message', value: `[Click Here to View User's Message](${userMessageUrl})` }
-                );
+                .addFields({ name: 'Severity', value: severity, inline: true });
 
-            // If the user replied to a message, add that message content and URL to the embed
+            // If the user referenced a message, add the message content and URL
             if (referencedMessage) {
                 let referencedMessageUrl = referencedMessage.url; // Get the referenced message's URL directly
 
