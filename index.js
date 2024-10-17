@@ -176,12 +176,12 @@ client.on('interactionCreate', async interaction => {
         let severity = options.getString('severity'); // Get the severity level
   
         // Defer the reply to avoid interaction timeout
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ });
   
         // Send the bug report to #bot-bugs with the message link from the user's bug report message
         const bugChannel = interaction.guild.channels.cache.find(c => c.name === 'bot-bugs');
         if (!bugChannel) {
-          return await interaction.followUp({ content: 'Could not find the bug report channel.', ephemeral: true });
+          return await interaction.followUp({ content: 'Could not find the bug report channel.'});
         }
   
         // Define colors based on severity
@@ -227,16 +227,16 @@ client.on('interactionCreate', async interaction => {
         await bugChannel.send({ embeds: [bugEmbed] });
   
         // Follow up with the user after the report has been submitted
-        await interaction.followUp({ content: 'Bug report has been submitted successfully!', ephemeral: true });
+        await interaction.followUp({ content: 'Bug report has been submitted successfully!' });
   
       } catch (error) {
         console.error('Error handling bug report:', error);
   
         // Handle specific error if it's related to the API being unavailable
         if (error.status === 503) {
-          await interaction.followUp({ content: 'The Discord service is currently unavailable. Please try again later.', ephemeral: true });
+          await interaction.followUp({ content: 'The Discord service is currently unavailable. Please try again later.'});
         } else {
-          await interaction.followUp({ content: 'An error occurred while submitting your bug report.', ephemeral: true });
+          await interaction.followUp({ content: 'An error occurred while submitting your bug report.'});
         }
       }
     }
