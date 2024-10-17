@@ -79,25 +79,21 @@ client.on('ready', async () => {
 
         // /bug with severity level
         new SlashCommandBuilder()
-    .setName('bug')
-    .setDescription('Submit a bug report')
-    .addStringOption(option =>
-        option.setName('description')
-            .setDescription('Describe the bug')
-            .setRequired(true))
-    .addStringOption(option =>
-        option.setName('severity')
-            .setDescription('Set the severity level of the bug')
-            .setRequired(true)
-            .addChoices(
-                { name: 'Low', value: 'low' },
-                { name: 'Medium', value: 'medium' },
-                { name: 'High', value: 'high' }
-            ))
-    .addStringOption(option =>
-        option.setName('message')
-            .setDescription('Message link or reference (optional)')
-            .setRequired(false))
+            .setName('bug')
+            .setDescription('Report a bug in the bot')
+            .addStringOption(option =>
+                option.setName('description')
+                    .setDescription('Describe the bug you encountered')
+                    .setRequired(true))
+            .addStringOption(option =>
+                option.setName('severity')
+                    .setDescription('Bug severity level')
+                    .addChoices(
+                        { name: 'Low', value: 'low' },
+                        { name: 'Medium', value: 'medium' },
+                        { name: 'High', value: 'high' }
+                    )
+                    .setRequired(true))
         ];
     
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
@@ -191,7 +187,7 @@ client.on('interactionCreate', async interaction => {
   
         // Define colors based on severity
         let embedColor;
-        
+
         if (severity === 'low') {
           embedColor = '#00FF00'; // Green for low severity
         } else if (severity === 'medium') {
@@ -207,7 +203,7 @@ client.on('interactionCreate', async interaction => {
   
         // Embed for the bug report
         const bugEmbed = new EmbedBuilder()
-          .setColor(severityColor) // Set color based on severity
+          .setColor(embedColor) // Set color based on severity
           .setTitle('Bug Report')
           .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
           .setTimestamp()
