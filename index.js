@@ -28,6 +28,42 @@ app.listen(PORT, () => {
     console.log(`Web server is running on port ${PORT}`);
 });
 
+let lastMessage; // Variable to hold the last sent message
+
+client.on('ready', async () => {
+
+    const channelId = '1296576918728212612';
+    const channel = await client.channels.fetch(channelId);
+
+    // Function to send a message every 5 minutes
+    setInterval(async () => {
+        try {
+            // Delete the last message if it exists
+            if (lastMessage) {
+                await lastMessage.delete();
+            }
+
+            // Send the new message
+            lastMessage = await channel.send('Bot is active!');
+
+            console.log('Sent a message to #bot-testing');
+        } catch (error) {
+            console.error('Error sending message:', error);
+        }
+    }, 5 * 60 * 1000); // every 5 minutes
+});
+
+// Keeping the bot alive
+setInterval(() => {
+    axios.get(`https://<your-render-app>.onrender.com/`)
+        .then(response => {
+            console.log('Keeping the bot alive:', response.data);
+        })
+        .catch(error => {
+            console.error('Error keeping the bot alive:', error);
+        });
+}, 5 * 60 * 1000); // every 5 minutes
+
 client.login(process.env.TOKEN);
 
 client.on('ready', async () => {
