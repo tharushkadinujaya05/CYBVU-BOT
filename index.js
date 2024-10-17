@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits, ChannelType, Partials, SlashCommandBuilder, R
 const { runGemini } = require('./gemini.js');
 const { processFile } = require('./fileHandler.js'); 
 const express = require('express');
+const axios = require('axios');
 
 const client = new Client({
     intents: [
@@ -55,7 +56,7 @@ client.on('ready', async () => {
 
 // Keeping the bot alive
 setInterval(() => {
-    axios.get(`https://<your-render-app>.onrender.com/`)
+    axios.get(`https://cybvu-bot.onrender.com`)
         .then(response => {
             console.log('Keeping the bot alive:', response.data);
         })
