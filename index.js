@@ -30,25 +30,24 @@ app.listen(PORT, () => {
     console.log(`Web server is running on port ${PORT}`);
 });
 
-let lastMessage; // Variable to hold the last sent message
-let startTime; // Variable to hold the start time of the bot
+let lastMessage;
+let startTime; 
 
 client.on('ready', async () => {
-    startTime = new Date(); // Record the start time when the bot is ready
+    startTime = new Date(); 
     const channelId = '1296576918728212612';
     const channel = await client.channels.fetch(channelId);
 
     // Function to send a message every 5 minutes
     setInterval(async () => {
         try {
-            // Check the status of the bot from the Render app
             const response = await axios.get('https://cybvu-bot.onrender.com/');
-            const body = response.data; // Get the response body
+            const body = response.data;
 
             // Calculate uptime
-            const uptime = Math.floor((Date.now() - startTime) / 1000); // Uptime in seconds
-            const minutes = Math.floor(uptime / 60); // Convert to minutes
-            const seconds = uptime % 60; // Remaining seconds
+            const uptime = Math.floor((Date.now() - startTime) / 1000); 
+            const minutes = Math.floor(uptime / 60);
+            const seconds = uptime % 60; 
             const uptimeString = `${minutes} minutes and ${seconds} seconds`;
 
             // Create an embed message based on the response
@@ -58,11 +57,11 @@ client.on('ready', async () => {
 
             // Check if the body contains "BOT IS UPPP!"
             if (response.status === 200 && body.includes('BOT IS UPPP!')) {
-                embed.setDescription('**Bot is active!** 🗿<:wumpus_congrats:1296622027289137217>\n\nStay tuned for updates and features!')
+                embed.setDescription('**Bot is active!** 🗿\n\nStay tuned for updates and features!')
                     .addFields(
-                        { name: '🤖 Current Status', value: 'Online', inline: true }, 
-                        { name: '🕒 Uptime', value: uptimeString, inline: true },
-                        { name: '📅 Last Restart', value: new Date().toLocaleString(), inline: true }
+                        { name: '🤖 Current Status', value: 'Online'}, 
+                        { name: '🕒 Uptime', value: uptimeString},
+                        { name: '📅 Last Restart', value: new Date().toLocaleString()}
                     )
                     .setThumbnail('https://cdn3.emoji.gg/emojis/4083-wumpusbeyonddance.png') 
                     .setFooter({ text: 'CYBVU BOT  <:icon:1295015539139280937>'}) 
@@ -122,10 +121,9 @@ client.on('ready', async () => {
                 lastMessage = await channel.send({ embeds: [errorEmbed] });
             }
         }
-    }, 1 * 60 * 1000); // every 1 minute
+    }, 5 * 60 * 1000); 
 });
 
-// Keeping the bot alive
 setInterval(() => {
     axios.get('https://cybvu-bot.onrender.com')
         .then(response => {
@@ -134,7 +132,7 @@ setInterval(() => {
         .catch(error => {
             console.error('Error keeping the bot alive:', error.message);
         });
-}, 5 * 60 * 1000); // every 5 minutes
+}, 5 * 60 * 1000); 
 
 client.login(process.env.TOKEN);
 
