@@ -13,8 +13,9 @@ async function processFile(attachment) {
         const fetch = (await import('node-fetch')).default;
 
         const response = await fetch(fileUrl);
-        const buffer = await response.buffer(); // Convert file content to buffer
-
+        const arrayBuffer = await response.arrayBuffer(); // Convert to ArrayBuffer
+        const buffer = Buffer.from(arrayBuffer);
+        
         // File handling version: Handle PDFs
         if (fileType === 'application/pdf') {
             const data = await pdfParse(buffer);

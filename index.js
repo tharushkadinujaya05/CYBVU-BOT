@@ -88,7 +88,7 @@ let startTime;
 
 client.on('ready', async () => {
     startTime = new Date(); 
-    const channelId = '1296576918728212612';
+    const channelId = '1296684450175913984';
     const channel = await client.channels.fetch(channelId);
 
     // Function to send a message every 5 minutes
@@ -214,7 +214,7 @@ client.on('ready', async () => {
                     .setDescription('Upload the file for the quiz')
                     .setRequired(true))
             .addIntegerOption(option =>
-                option.setName('questions')
+                option.setName('number_of_questions')
                     .setDescription('Number of questions to generate')
                     .setRequired(true))
             .addStringOption(option =>
@@ -275,6 +275,7 @@ client.on('interactionCreate', async interaction => {
 
     const { commandName } = interaction;
 
+    // Process File Command
     if (commandName === 'processfile') {
         const prompt = interaction.options.getString('prompt');
         const attachment = interaction.options.getAttachment('file');
@@ -289,9 +290,11 @@ client.on('interactionCreate', async interaction => {
                     const finalPrompt = `${prompt}\n\nFile content: ${fileContent}`;
                     const result = await runGemini(finalPrompt);
                     const responseChunks = splitResponse(result);
-                    responseChunks.forEach(async (responseChunk) => {
-                        await interaction.editReply(responseChunk); 
-                    });
+                    await interaction.editReply(responseChunks[0]);
+    
+                    for (let i = 1; i < responseChunks.length; i++) {
+                        await interaction.followUp(responseChunks[i]);
+                    }
                 } else {
                     await interaction.editReply('Sorry, I could not process this file type.');
                 }
@@ -302,18 +305,25 @@ client.on('interactionCreate', async interaction => {
         } else {
             await interaction.editReply('Please attach a file to process.');
         }
-    } else if (commandName === 'slidesummarizer') {
-        const file = options.getAttachment('file');
-
+    } 
+    // Slidesummarizer Command
+    else if (commandName === 'slidesummarizer') {
+        const file = interaction.options.getAttachment('file');
         await interaction.deferReply();
-
+    
         if (file) {
             try {
                 const fileContent = await processFile(file);
                 if (fileContent) {
                     const summaryPrompt = `Summarize the content slide by slide in a brief manner. Content: ${fileContent}`;
                     const result = await runGemini(summaryPrompt);
-                    await interaction.editReply(result);
+                    const responseChunks = splitResponse(result);
+                    
+                    await interaction.editReply(responseChunks[0]);
+    
+                    for (let i = 1; i < responseChunks.length; i++) {
+                        await interaction.followUp(responseChunks[i]);
+                    }
                 } else {
                     await interaction.editReply('Unable to process the file.');
                 }
@@ -321,8 +331,44 @@ client.on('interactionCreate', async interaction => {
                 await interaction.editReply('An error occurred while summarizing the slides.');
             }
         }
-
     } 
+    // Quizmode Command
+    else if (commandName === 'quizmode') {
+        const file = interaction.options.getAttachment('file');  // Get the uploaded file
+        const numQuestions = interaction.options.getInteger('number_of_questions'); // Get the number of questions
+        const quizType = interaction.options.getString('type');  // Get the quiz type (MCQ or Essay)
+
+        await interaction.deferReply();  // Defer the reply in case it takes time to generate the quiz
+
+        if (file) {
+            try {
+                // Step 1: Process the uploaded file and extract the text content
+                const fileContent = await processFile(file);
+
+                if (!fileContent) {
+                    await interaction.editReply('Unable to process the file. Supported file types are PDF, DOCX, PPTX, and images.');
+                    return;
+                }
+
+                // Step 2: Create a prompt using the specified format
+                const prompt = `Create ${numQuestions} ${quizType} Questions using this file content: ${fileContent}`;
+
+                // Step 3: Run the prompt through the AI model
+                const result = await runGemini(prompt);
+                const responseChunks = splitResponse(result);
+
+                // Step 4: Send the response in chunks to the user
+                for (const chunk of responseChunks) {
+                    await interaction.followUp(chunk); // Use followUp to send multiple messages
+                }
+            } catch (error) {
+                console.error('Error generating quiz:', error);
+                await interaction.editReply('An error occurred while generating the quiz.');
+            }
+        } else {
+            await interaction.editReply('Please attach a file to generate the quiz.');
+        }
+    }
 });
 
 client.on('interactionCreate', async interaction => {
