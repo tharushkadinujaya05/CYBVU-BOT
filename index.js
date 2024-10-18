@@ -23,7 +23,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-    res.send('Suspenede by owner'); 
+    res.send('BOT IS UPPP!'); 
 });
 
 app.listen(PORT, () => {
@@ -50,11 +50,6 @@ client.on('ready', async () => {
             const minutes = Math.floor(uptime / 60); // Convert to minutes
             const seconds = uptime % 60; // Remaining seconds
             const uptimeString = `${minutes} minutes and ${seconds} seconds`;
-
-            // Create an embed message based on the response
-            const embed = new EmbedBuilder()
-                .setColor('#3A3EDB') 
-                .setTitle('🔔 Bot Status Update');
 
             // Check if the body contains "BOT IS UPPP!"
             if (response.status === 200 && body.includes('BOT IS UPPP!')) {
