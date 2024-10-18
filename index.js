@@ -4,6 +4,7 @@ const { runGemini } = require('./gemini.js');
 const { processFile } = require('./fileHandler.js'); 
 const express = require('express');
 const axios = require('axios');
+const { EmbedBuilder } = require('discord.js'); 
 
 const client = new Client({
     intents: [
@@ -22,7 +23,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-    res.send('BOT IS UPPP!'); 
+    res.send('Suspenede by owner'); 
 });
 
 app.listen(PORT, () => {
@@ -32,31 +33,64 @@ app.listen(PORT, () => {
 let lastMessage; // Variable to hold the last sent message
 
 client.on('ready', async () => {
-
     const channelId = '1296576918728212612';
     const channel = await client.channels.fetch(channelId);
 
     // Function to send a message every 5 minutes
     setInterval(async () => {
         try {
+            // Check the status of the bot from the Render app
+            const response = await axios.get('https://cybvu-bot.onrender.com/');
+            const body = response.data; // Get the response body
+
+            // Create an embed message based on the response
+            const embed = new EmbedBuilder()
+                .setColor('#3A3EDB') 
+                .setTitle('🔔 Bot Status Update');
+
+            // Check if the body contains "BOT IS UPPP!"
+            if (body.includes('BOT IS UPPP!')) {
+                embed.setDescription('**Bot is active!** 🟢\n\nStay tuned for updates and features!')
+                     .addFields(
+                        { name: '🤖 Current Status', value: 'Online', inline: true }, 
+                        { name: '🕒 Uptime', value: '5 minutes', inline: true },
+                        { name: '📅 Last Restart', value: new Date().toLocaleString(), inline: true }
+                    )
+                    .setThumbnail('https://example.com/thumbnail.png') // Replace with your image URL
+                    .setImage('https://example.com/image.png') // Replace with your image URL
+                    .setFooter({ text: 'Thank you for using our bot!', iconURL: 'https://example.com/footer-icon.png' }) // Replace with your icon URL
+                    .setTimestamp();
+            } else {
+                embed.setDescription('**Bot is inactive!** 🔴\n\nPlease check the bot status.')
+                     .addFields(
+                        { name: '🤖 Current Status', value: 'Offline', inline: true }, 
+                        { name: '🕒 Uptime', value: 'N/A', inline: true },
+                        { name: '📅 Last Restart', value: new Date().toLocaleString(), inline: true }
+                    )
+                    .setThumbnail('https://example.com/thumbnail.png') // Replace with your image URL
+                    .setImage('https://example.com/image.png') // Replace with your image URL
+                    .setFooter({ text: 'CYBVU HQ BOT'}) // Replace with your icon URL
+                    .setTimestamp();
+            }
+
             // Delete the last message if it exists
             if (lastMessage) {
                 await lastMessage.delete();
             }
 
-            // Send the new message
-            lastMessage = await channel.send('Bot is active!');
+            // Send the new embed message
+            lastMessage = await channel.send({ embeds: [embed] });
 
             console.log('Sent a message to #bot-testing');
         } catch (error) {
-            console.error('Error sending message:', error);
+            console.error('Error checking bot status:', error);
         }
-    }, 5 * 60 * 1000); // every 5 minutes
+    }, 0.5 * 60 * 1000); // every 5 minutes
 });
 
 // Keeping the bot alive
 setInterval(() => {
-    axios.get(`https://cybvu-bot.onrender.com`)
+    axios.get('https://cybvu-bot.onrender.com')
         .then(response => {
             console.log('Keeping the bot alive:', response.data);
         })
@@ -202,8 +236,6 @@ client.on('interactionCreate', async interaction => {
 
     } 
 });
-
-const { EmbedBuilder } = require('discord.js'); // Use EmbedBuilder for v14+
 
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
