@@ -51,14 +51,14 @@ client.on('ready', async () => {
             const seconds = uptime % 60; // Remaining seconds
             const uptimeString = `${minutes} minutes and ${seconds} seconds`;
 
+            // Create an embed message based on the response
+            const embed = new EmbedBuilder()
+                .setColor('#3A3EDB') 
+                .setTitle('🔔 Bot Status Update');
+
             // Check if the body contains "BOT IS UPPP!"
             if (response.status === 200 && body.includes('BOT IS UPPP!')) {
-                    const embed = new EmbedBuilder()
-                    .setColor('#3A3EDB') 
-                    .setTitle('🔔 Bot Status Update')
-                    .setColor('#3A3EDB')
-                    .setTitle('🔔 Bot Status Update ')
-                    .setDescription('**Bot is active!** 🗿<:wumpus_congrats:1296622027289137217>\n\nStay tuned for updates and features!')
+                embed.setDescription('**Bot is active!** 🗿<:wumpus_congrats:1296622027289137217>\n\nStay tuned for updates and features!')
                     .addFields(
                         { name: '🤖 Current Status', value: 'Online', inline: true }, 
                         { name: '🕒 Uptime', value: uptimeString, inline: true },
@@ -93,8 +93,8 @@ client.on('ready', async () => {
                         { name: '🕒 Uptime', value: 'N/A', inline: true },
                         { name: '📅 Last Restart', value: new Date().toLocaleString(), inline: true }
                     )
-                    .setThumbnail('https://cdn3.emoji.gg/emojis/9576-wumpusbeyondsad.png') // Replace with your image URL
-                    .setFooter({ text: 'Thank you for your patience!', iconURL: 'https://example.com/footer-icon.png' }) // Replace with your icon URL
+                    .setThumbnail('https://cdn3.emoji.gg/emojis/9576-wumpusbeyondsad.png') 
+                    .setFooter({ text: 'Thank you for your patience!' }) 
                     .setTimestamp();
 
                 if (lastMessage) {
@@ -122,7 +122,7 @@ client.on('ready', async () => {
                 lastMessage = await channel.send({ embeds: [errorEmbed] });
             }
         }
-    }, 1 * 60 * 1000); // every 5 minutes
+    }, 1 * 60 * 1000); // every 1 minute
 });
 
 // Keeping the bot alive
