@@ -58,7 +58,7 @@ client.on('ready', async () => {
 
             // Check if the body contains "BOT IS UPPP!"
             if (response.status === 200 && body.includes('BOT IS UPPP!')) {
-                embed
+                const embed = new EmbedBuilder()
                     .setColor('#3A3EDB')
                     .setTitle('🔔 Bot Status Update ')
                     .setDescription('**Bot is active!** 🗿<:wumpus_congrats:1296622027289137217>\n\nStay tuned for updates and features!')
