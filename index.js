@@ -67,7 +67,7 @@ client.on('ready', async () => {
                         { name: '🕒 Uptime', value: uptimeString, inline: true }, // Use dynamic uptime
                         { name: '📅 Last Restart', value: new Date().toLocaleString(), inline: true }
                     )
-                    .setThumbnail('https://cdn3.emoji.gg/emojis/1237-wumpusbeyondsmile.png') 
+                    .setThumbnail('https://cdn3.emoji.gg/emojis/4083-wumpusbeyonddance.png') 
                     .setFooter({ text: 'CYBVU BOT  <:icon:1295015539139280937>'}) 
                     .setTimestamp();
             }
@@ -88,7 +88,7 @@ client.on('ready', async () => {
             // Handle 503 errors specifically
             if (error.response && error.response.status === 503) {
                 const embed = new EmbedBuilder()
-                    .setColor('#FF0000') // Red color for inactive status
+                    .setColor('#FF0000') 
                     .setTitle('🔴 Bot Status Update')
                     .setDescription('**Bot is inactive!** 🔴\n\nThe server is temporarily unavailable (503). Please check back later.')
                     .addFields(
@@ -96,7 +96,7 @@ client.on('ready', async () => {
                         { name: '🕒 Uptime', value: 'N/A', inline: true },
                         { name: '📅 Last Restart', value: new Date().toLocaleString(), inline: true }
                     )
-                    .setThumbnail('https://example.com/thumbnail.png') // Replace with your image URL
+                    .setThumbnail('https://cdn3.emoji.gg/emojis/9576-wumpusbeyondsad.png') // Replace with your image URL
                     .setFooter({ text: 'Thank you for your patience!', iconURL: 'https://example.com/footer-icon.png' }) // Replace with your icon URL
                     .setTimestamp();
 
@@ -109,7 +109,7 @@ client.on('ready', async () => {
             } else {
                 // Handle other errors (non-503)
                 const errorEmbed = new EmbedBuilder()
-                    .setColor('#FF0000') // Red color for errors
+                    .setColor('#FF0000') 
                     .setTitle('⚠️ Error Updating Bot Status')
                     .setDescription('An error occurred while checking the bot status. Please investigate!')
                     .addFields(
@@ -125,7 +125,7 @@ client.on('ready', async () => {
                 lastMessage = await channel.send({ embeds: [errorEmbed] });
             }
         }
-    }, 0.1 * 60 * 1000); // every 5 minutes
+    }, 1 * 60 * 1000); // every 5 minutes
 });
 
 // Keeping the bot alive
