@@ -113,7 +113,7 @@ client.on('ready', async () => {
                 embed.setDescription('**Bot is active!** 🗿\n\nStay tuned for updates and features!')
                     .addFields(
                         { name: '🤖 Current Status', value: 'Online',inline: true }, 
-                        { name: '🕒 Uptime', value: uptimeString},
+                        { name: '🕒 Uptime', value: uptimeString, inline: true},
                         { name: '📅 Last Restart', value: new Date().toLocaleString()}
                     )
                     .setThumbnail('https://cdn3.emoji.gg/emojis/4083-wumpusbeyonddance.png') 
