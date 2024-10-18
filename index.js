@@ -31,8 +31,10 @@ app.listen(PORT, () => {
 });
 
 let lastMessage; // Variable to hold the last sent message
+let startTime; // Variable to hold the start time of the bot
 
 client.on('ready', async () => {
+    startTime = new Date(); // Record the start time when the bot is ready
     const channelId = '1296576918728212612';
     const channel = await client.channels.fetch(channelId);
 
@@ -43,33 +45,30 @@ client.on('ready', async () => {
             const response = await axios.get('https://cybvu-bot.onrender.com/');
             const body = response.data; // Get the response body
 
+            // Calculate uptime
+            const uptime = Math.floor((Date.now() - startTime) / 1000); // Uptime in seconds
+            const minutes = Math.floor(uptime / 60); // Convert to minutes
+            const seconds = uptime % 60; // Remaining seconds
+            const uptimeString = `${minutes} minutes and ${seconds} seconds`;
+
             // Create an embed message based on the response
             const embed = new EmbedBuilder()
                 .setColor('#3A3EDB') 
                 .setTitle('🔔 Bot Status Update');
 
             // Check if the body contains "BOT IS UPPP!"
-            if (body.includes('BOT IS UPPP!')) {
-                embed.setDescription('**Bot is active!** 🟢\n\nStay tuned for updates and features!')
-                     .addFields(
+            if (response.status === 200 && body.includes('BOT IS UPPP!')) {
+                embed
+                    .setColor('#3A3EDB')
+                    .setTitle('🔔 Bot Status Update ')
+                    .setDescription('**Bot is active!** 🗿<:wumpus_congrats:1296622027289137217>\n\nStay tuned for updates and features!')
+                    .addFields(
                         { name: '🤖 Current Status', value: 'Online', inline: true }, 
-                        { name: '🕒 Uptime', value: '5 minutes', inline: true },
+                        { name: '🕒 Uptime', value: uptimeString, inline: true }, // Use dynamic uptime
                         { name: '📅 Last Restart', value: new Date().toLocaleString(), inline: true }
                     )
-                    .setThumbnail('https://example.com/thumbnail.png') // Replace with your image URL
-                    .setImage('https://example.com/image.png') // Replace with your image URL
-                    .setFooter({ text: 'Thank you for using our bot!', iconURL: 'https://example.com/footer-icon.png' }) // Replace with your icon URL
-                    .setTimestamp();
-            } else {
-                embed.setDescription('**Bot is inactive!** 🔴\n\nPlease check the bot status.')
-                     .addFields(
-                        { name: '🤖 Current Status', value: 'Offline', inline: true }, 
-                        { name: '🕒 Uptime', value: 'N/A', inline: true },
-                        { name: '📅 Last Restart', value: new Date().toLocaleString(), inline: true }
-                    )
-                    .setThumbnail('https://example.com/thumbnail.png') // Replace with your image URL
-                    .setImage('https://example.com/image.png') // Replace with your image URL
-                    .setFooter({ text: 'CYBVU HQ BOT'}) // Replace with your icon URL
+                    .setThumbnail('https://cdn3.emoji.gg/emojis/1237-wumpusbeyondsmile.png') 
+                    .setFooter({ text: 'CYBVU BOT  <:icon:1295015539139280937>'}) 
                     .setTimestamp();
             }
 
@@ -82,10 +81,51 @@ client.on('ready', async () => {
             lastMessage = await channel.send({ embeds: [embed] });
 
             console.log('Sent a message to #bot-testing');
+
         } catch (error) {
             console.error('Error checking bot status:', error);
+
+            // Handle 503 errors specifically
+            if (error.response && error.response.status === 503) {
+                const embed = new EmbedBuilder()
+                    .setColor('#FF0000') // Red color for inactive status
+                    .setTitle('🔴 Bot Status Update')
+                    .setDescription('**Bot is inactive!** 🔴\n\nThe server is temporarily unavailable (503). Please check back later.')
+                    .addFields(
+                        { name: '🤖 Current Status', value: 'Offline', inline: true }, 
+                        { name: '🕒 Uptime', value: 'N/A', inline: true },
+                        { name: '📅 Last Restart', value: new Date().toLocaleString(), inline: true }
+                    )
+                    .setThumbnail('https://example.com/thumbnail.png') // Replace with your image URL
+                    .setFooter({ text: 'Thank you for your patience!', iconURL: 'https://example.com/footer-icon.png' }) // Replace with your icon URL
+                    .setTimestamp();
+
+                if (lastMessage) {
+                    await lastMessage.delete();
+                }
+
+                lastMessage = await channel.send({ embeds: [embed] });
+
+            } else {
+                // Handle other errors (non-503)
+                const errorEmbed = new EmbedBuilder()
+                    .setColor('#FF0000') // Red color for errors
+                    .setTitle('⚠️ Error Updating Bot Status')
+                    .setDescription('An error occurred while checking the bot status. Please investigate!')
+                    .addFields(
+                        { name: 'Error Message', value: error.message, inline: false },
+                        { name: '📅 Last Restart', value: new Date().toLocaleString(), inline: true }
+                    )
+                    .setTimestamp();
+
+                if (lastMessage) {
+                    await lastMessage.delete();
+                }
+
+                lastMessage = await channel.send({ embeds: [errorEmbed] });
+            }
         }
-    }, 0.5 * 60 * 1000); // every 5 minutes
+    }, 0.1 * 60 * 1000); // every 5 minutes
 });
 
 // Keeping the bot alive
@@ -95,7 +135,7 @@ setInterval(() => {
             console.log('Keeping the bot alive:', response.data);
         })
         .catch(error => {
-            console.error('Error keeping the bot alive:', error);
+            console.error('Error keeping the bot alive:', error.message);
         });
 }, 5 * 60 * 1000); // every 5 minutes
 
