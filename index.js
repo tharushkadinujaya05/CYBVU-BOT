@@ -30,6 +30,59 @@ app.listen(PORT, () => {
     console.log(`Web server is running on port ${PORT}`);
 });
 
+const RulesChannelID = '1294605516361961575'; 
+
+client.once('ready', async () => {
+
+    const channel = await client.channels.fetch(RulesChannelID); // Fetch the channel
+
+    // Check if the rules message already exists
+    const messages = await channel.messages.fetch({ limit: 10 }); // Fetch the last 10 messages
+    const existingMessage = messages.find(msg => msg.embeds.length > 0 && msg.embeds[0].title === ':bookmark: CYBVU HQ Server Rules');
+
+    // If the rules message doesn't exist, send it
+    if (!existingMessage) {
+        const embed = new EmbedBuilder()
+            .setColor('#3A3EDB')
+            .setTitle(':bookmark: CYBVU HQ Server Rules')
+            .setDescription(`
+                Welcome, cyber warriors! To ensure our community thrives and remains a safe space for all members, please adhere to the following guidelines.
+                
+                <:bullet:1295002729164308552> Respect All Members 
+                <:Empty:1295003643522711614><:subcat:1295002845296328735> Kindness is key! Treat everyone with respect—no harassment, hate speech, or discrimination.
+                
+                <:bullet:1295002729164308552> No Spam Zone
+                <:Empty:1295003643522711614><:subcat:1295002845296328735>Please refrain from spamming messages, links, or self-promotions. Let’s keep our discussions meaningful!
+                
+                <:bullet:1295002729164308552> Stay On Topic
+                <:Empty:1295003643522711614><:subcat:1295002845296328735> Keep conversations relevant to cybersecurity and the channel topic. For off-topic chats, check out our other channels!
+                
+                <:bullet:1295002729164308552> Content Guidelines
+                <:Empty:1295003643522711614><:subcat:1295002845296328735> No NSFW, gore, or any content that could be inappropriate. Keep it professional and safe for all!
+                
+                <:bullet:1295002729164308552> Follow Discord’s Terms of Service
+                <:Empty:1295003643522711614><:subcat:1295002845296328735> Make sure you’re abiding by Discord’s rules while you’re here.
+                
+                <:bullet:1295002729164308552> Have Fun & Collaborate
+                <:Empty:1295003643522711614><:subcat:1295002845296328735> Engage, share knowledge, and make new friends in the world of cybersecurity!
+                
+                **React with <:icon:1295015539139280937> if you understand the rules!**
+                            `)
+            .setFooter({ text: 'CYBVU HQ'}) 
+            .setTimestamp();
+
+        // Send the embed message to the rules channel
+        try {
+            await channel.send({ embeds: [embed] });
+            console.log('Rules message sent successfully!');
+        } catch (error) {
+            console.error('Error sending rules message:', error);
+        }
+    } else {
+        console.log('Rules message already exists; not sending again.');
+    }
+});
+
 let lastMessage;
 let startTime; 
 
@@ -59,12 +112,12 @@ client.on('ready', async () => {
             if (response.status === 200 && body.includes('BOT IS UPPP!')) {
                 embed.setDescription('**Bot is active!** 🗿\n\nStay tuned for updates and features!')
                     .addFields(
-                        { name: '🤖 Current Status', value: 'Online'}, 
+                        { name: '🤖 Current Status', value: 'Online',inline: true }, 
                         { name: '🕒 Uptime', value: uptimeString},
                         { name: '📅 Last Restart', value: new Date().toLocaleString()}
                     )
                     .setThumbnail('https://cdn3.emoji.gg/emojis/4083-wumpusbeyonddance.png') 
-                    .setFooter({ text: 'CYBVU BOT  <:icon:1295015539139280937>'}) 
+                    .setFooter({ text: 'CYBVU BOT'}) 
                     .setTimestamp();
             }
 
