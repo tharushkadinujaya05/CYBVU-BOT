@@ -58,13 +58,15 @@ client.on('ready', async () => {
 
             // Check if the body contains "BOT IS UPPP!"
             if (response.status === 200 && body.includes('BOT IS UPPP!')) {
-                const embed = new EmbedBuilder()
+                    const embed = new EmbedBuilder()
+                    .setColor('#3A3EDB') 
+                    .setTitle('🔔 Bot Status Update')
                     .setColor('#3A3EDB')
                     .setTitle('🔔 Bot Status Update ')
                     .setDescription('**Bot is active!** 🗿<:wumpus_congrats:1296622027289137217>\n\nStay tuned for updates and features!')
                     .addFields(
                         { name: '🤖 Current Status', value: 'Online', inline: true }, 
-                        { name: '🕒 Uptime', value: uptimeString, inline: true }, // Use dynamic uptime
+                        { name: '🕒 Uptime', value: uptimeString, inline: true },
                         { name: '📅 Last Restart', value: new Date().toLocaleString(), inline: true }
                     )
                     .setThumbnail('https://cdn3.emoji.gg/emojis/4083-wumpusbeyonddance.png') 
