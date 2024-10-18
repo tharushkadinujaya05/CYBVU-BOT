@@ -571,7 +571,6 @@ client.on('messageCreate', async message => {
         }
     }
 });
-
 // Helper function to split large responses
 function splitResponse(response) {
     const maxChunkLength = 2000;
