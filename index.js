@@ -34,7 +34,7 @@ const RulesChannelID = '1294605516361961575';
 // added bot status
 client.once('ready', async () => {
     client.user.setPresence({
-        activities: [{ name: 'Among Us but with no impostors 🔪', type: ActivityType.Playing }],
+        activities: [{ name: 'Dreams of GPA 4.0 evaporate', type: ActivityType.Listening }],
         status: 'online'
     });
 
