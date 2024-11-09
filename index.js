@@ -4,7 +4,7 @@ const { runGemini } = require('./gemini.js');
 const { processFile } = require('./fileHandler.js'); 
 const express = require('express');
 const axios = require('axios');
-const { EmbedBuilder } = require('discord.js'); 
+const { EmbedBuilder, ActivityType } = require('discord.js'); 
 
 const client = new Client({
     intents: [
