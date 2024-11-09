@@ -81,6 +81,13 @@ client.once('ready', async () => {
     } else {
         console.log('Rules message already exists; not sending again.');
     }
+    await client.user.setPresence({
+        activities: [{
+            name: 'Among Us but with no impostors 🔪',
+            type: 'PLAYING', 
+        }],
+        status: 'online',  
+    });
 });
 
 let lastMessage;
