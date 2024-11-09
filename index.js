@@ -33,6 +33,10 @@ app.listen(PORT, () => {
 const RulesChannelID = '1294605516361961575'; 
 
 client.once('ready', async () => {
+    client.user.setPresence({
+        activities: [{ name: 'Among Us but with no impostors 🔪', type: ActivityType.Playing }],
+        status: 'online'
+    });
 
     const channel = await client.channels.fetch(RulesChannelID); // Fetch the channel
 
@@ -81,13 +85,6 @@ client.once('ready', async () => {
     } else {
         console.log('Rules message already exists; not sending again.');
     }
-    await client.user.setPresence({
-        activities: [{
-            name: 'Among Us but with no impostors 🔪',
-            type: 'PLAYING', 
-        }],
-        status: 'online',  
-    });
 });
 
 let lastMessage;
