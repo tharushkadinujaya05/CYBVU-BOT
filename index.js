@@ -450,7 +450,7 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-const keywords = ['stfu', 'damn', 'come alive', 'gay', "for fuck's sake", "kill", "stupid", "deadline", "gn", "gm", "good night", "good morning", "tc", "fast", "asap"]; 
+const keywords = ['stfu', 'damn', 'come alive', 'gay', "for fuck's sake", "kill", "stupid", "deadline", "gn", "gm", "good night", "good morning", "tc", "fast", "asap", "😭"]; 
 
 client.on('messageCreate', async message => {
     console.log(`Received message: ${message.content}`);
@@ -496,7 +496,10 @@ client.on('messageCreate', async message => {
 
     for (const keyword of keywords) {
         const regex = new RegExp(`\\b${keyword}\\b`, 'i'); 
-        if (regex.test(lowerCaseContent)) {
+        if (keyword === "😭" && message.content.includes(keyword)) {
+            await message.reply("I noticed that you used \"😭\" in your comment. Just wanted to say, don't give up anything in your life. I don't know what you're going through but I'm always here to help.");
+            return;
+        } else if (regex.test(lowerCaseContent)) {
             try {
                 const result = await runGemini(`You are a Discord bot in a computer faculty students server that gives funny autoreponders when detecting specific keywords in msgs. Write a funny autorespond message when the user sends the word "${keyword}". Please provide a single funny and chill reply with emojis. If the topic is sensitive or could be considered harassment, respond with a light-hearted joke instead. Don't give the finishReason: "SAFETY" error. Here’s the user complete message: "${message.content}". And don't send multiple messages; send one line at a time so the reply looks clean on the server.`); 
                 await message.reply(result);
