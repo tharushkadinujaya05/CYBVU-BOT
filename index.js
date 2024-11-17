@@ -11,7 +11,8 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.DirectMessages
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.GuildMessageReactions,
     ],
     partials: [
         Partials.Message,
@@ -209,37 +210,88 @@ client.on('ready', async () => {
                     .setDescription('The file to be processed')
                     .setRequired(true)),
 
-        // /quizmode
+        // Notes Command
         new SlashCommandBuilder()
-            .setName('quizmode')
-            .setDescription('Generate a quiz from a file')
-            .addAttachmentOption(option =>
-                option.setName('file')
-                    .setDescription('Upload the file for the quiz')
-                    .setRequired(true))
+            .setName('notes')
+            .setDescription('Search and list lecture notes')
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('search')
+                    .setDescription('Search for lecture notes')
+                    .addStringOption(option =>
+                        option.setName('subject')
+                        .setDescription('Subject code (e.g., DFEH)')
+                        .setRequired(true))
+                    .addIntegerOption(option =>
+                        option.setName('week')
+                        .setDescription('Week number (optional)')
+                        .setRequired(false)))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('list')
+                    .setDescription('List all available notes')),
+
+        // Pomodoro Timer
+        new SlashCommandBuilder()
+            .setName('pomodoro')
+            .setDescription('Start a Pomodoro study timer')
             .addIntegerOption(option =>
-                option.setName('number_of_questions')
-                    .setDescription('Number of questions to generate')
-                    .setRequired(true))
-            .addStringOption(option =>
-                option.setName('type')
-                    .setDescription('Type of quiz: MCQ or Essay')
-                    .addChoices(
-                        { name: 'MCQ', value: 'mcq' },
-                        { name: 'Essay', value: 'essay' }
-                    )
-                    .setRequired(true)),
+                option.setName('duration')
+                .setDescription('Study duration in minutes')
+                .setRequired(true)),
 
-        // /slidesummarizer
+        // Poll Creator
         new SlashCommandBuilder()
-            .setName('slidesummarizer')
-            .setDescription('Summarize a slide deck')
-            .addAttachmentOption(option =>
-                option.setName('file')
-                    .setDescription('Upload the file to summarize')
-                    .setRequired(true)),
+            .setName('poll')
+            .setDescription('Create a quick poll')
+            .addStringOption(option =>
+                option.setName('question')
+                .setDescription('Poll question')
+                .setRequired(true))
+            .addStringOption(option =>
+                option.setName('options')
+                .setDescription('Poll options (comma-separated)')
+                .setRequired(true)),
 
-        // /bug with severity level and optional message link
+        // Study Group Creator
+        new SlashCommandBuilder()
+            .setName('studygroup')
+            .setDescription('Create or find study groups')
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('create')
+                    .setDescription('Create a study group')
+                    .addStringOption(option =>
+                        option.setName('subject')
+                        .setDescription('Subject to study')
+                        .setRequired(true))
+                    .addIntegerOption(option =>
+                        option.setName('capacity')
+                        .setDescription('Maximum number of participants')
+                        .setRequired(true))),
+
+        // Event Creator
+        new SlashCommandBuilder()
+            .setName('event')
+            .setDescription('Create or view college events')
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('create')
+                    .setDescription('Create a new event')
+                    .addStringOption(option =>
+                        option.setName('title')
+                        .setDescription('Event title')
+                        .setRequired(true))
+                    .addStringOption(option =>
+                        option.setName('date')
+                        .setDescription('Event date and time')
+                        .setRequired(true))
+                    .addStringOption(option =>
+                        option.setName('description')
+                        .setDescription('Event description')
+                        .setRequired(true))),
+
+        // Bug Report
         new SlashCommandBuilder()
             .setName('bug')
             .setDescription('Report a bug in the bot')
@@ -258,10 +310,10 @@ client.on('ready', async () => {
                     .setRequired(true))
             .addStringOption(option =>
                 option.setName('message_link')
-                    .setDescription('Optional: Paste the link to the message you are referencing.')
-                    .setRequired(false)) 
-        ];
-    
+                    .setDescription('Optional: Message link reference')
+                    .setRequired(false))
+    ];
+
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
     try {
         await rest.put(
@@ -371,6 +423,123 @@ client.on('interactionCreate', async interaction => {
             }
         } else {
             await interaction.editReply('Please attach a file to generate the quiz.');
+        }
+    }
+    // Add this to your interactionCreate event handler
+    else if (commandName === 'notes') {
+        const subcommand = interaction.options.getSubcommand();
+        const forumChannelId = '1294760775142871120';
+
+        try {
+            await interaction.deferReply();
+            const forumChannel = await client.channels.fetch(forumChannelId);
+            
+            if (!forumChannel) {
+                await interaction.editReply('Could not find the lecture notes forum.');
+                return;
+            }
+
+            // Fetch active and archived threads
+            const activeThreads = await forumChannel.threads.fetchActive();
+            const archivedThreads = await forumChannel.threads.fetchArchived();
+            
+            // Combine all threads
+            const allThreads = [...activeThreads.threads.values(), ...archivedThreads.threads.values()];
+
+            if (subcommand === 'search') {
+                const subject = interaction.options.getString('subject').toUpperCase();
+                const week = interaction.options.getInteger('week');
+
+                // Filter threads based on search criteria
+                const matchingThreads = allThreads.filter(thread => {
+                    const threadName = thread.name.toUpperCase();
+                    if (week) {
+                        return threadName.includes(subject) && threadName.includes(`WEEK ${week}`);
+                    }
+                    return threadName.includes(subject);
+                });
+
+                if (matchingThreads.length === 0) {
+                    await interaction.editReply({
+                        content: week 
+                            ? `No notes found for ${subject} Week ${week}`
+                            : `No notes found for ${subject}`,
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                // Sort threads by week number
+                const sortedThreads = matchingThreads.sort((a, b) => {
+                    const weekA = parseInt(a.name.match(/WEEK\s+(\d+)/i)?.[1] || '0');
+                    const weekB = parseInt(b.name.match(/WEEK\s+(\d+)/i)?.[1] || '0');
+                    return weekA - weekB;
+                });
+
+                const searchEmbed = new EmbedBuilder()
+                    .setColor('#3A3EDB')
+                    .setTitle(`📚 Lecture Notes: ${subject}${week ? ` - Week ${week}` : ''}`)
+                    .setDescription(
+                        sortedThreads.map(thread => 
+                            `• [${thread.name}](${thread.url})`
+                        ).join('\n')
+                    )
+                    .setFooter({ text: `Found ${sortedThreads.length} note(s)` });
+
+                await interaction.editReply({ embeds: [searchEmbed] });
+            }
+            else if (subcommand === 'list') {
+                // Group threads by subject
+                const notesBySubject = new Map();
+
+                allThreads.forEach(thread => {
+                    const match = thread.name.toUpperCase().match(/([A-Z]{4})/);
+                    if (match) {
+                        const subject = match[1];
+                        if (!notesBySubject.has(subject)) {
+                            notesBySubject.set(subject, []);
+                        }
+                        notesBySubject.get(subject).push(thread);
+                    }
+                });
+
+                // Sort subjects alphabetically
+                const sortedSubjects = Array.from(notesBySubject.keys()).sort();
+
+                const listEmbed = new EmbedBuilder()
+                    .setColor('#3A3EDB')
+                    .setTitle('📚 Available Lecture Notes')
+                    .setDescription('Here are all available notes grouped by subject:');
+
+                for (const subject of sortedSubjects) {
+                    const threads = notesBySubject.get(subject);
+                    // Sort threads by week number within each subject
+                    const sortedThreads = threads.sort((a, b) => {
+                        const weekA = parseInt(a.name.match(/WEEK\s+(\d+)/i)?.[1] || '0');
+                        const weekB = parseInt(b.name.match(/WEEK\s+(\d+)/i)?.[1] || '0');
+                        return weekA - weekB;
+                    });
+
+                    const notesList = sortedThreads
+                        .map(thread => `• [${thread.name}](${thread.url})`)
+                        .join('\n');
+
+                    if (notesList) {
+                        listEmbed.addFields({
+                            name: `📝 ${subject}`,
+                            value: notesList,
+                        });
+                    }
+                }
+
+                await interaction.editReply({ embeds: [listEmbed] });
+            }
+        } catch (error) {
+            console.error('Error handling notes command:', error);
+            await interaction.editReply({
+                content: 'An error occurred while fetching the notes. Error: ' + error.message,
+                ephemeral: true
+            });
         }
     }
 });
