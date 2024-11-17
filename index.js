@@ -587,6 +587,68 @@ client.on('interactionCreate', async interaction => {
             await message.react('✅');
         }
     }
+    // Add this to your interactionCreate event handler
+    else if (commandName === 'poll') {
+        const question = interaction.options.getString('question');
+        const optionsString = interaction.options.getString('options');
+        const options = optionsString.split(',').map(opt => opt.trim());
+
+        if (options.length > 10) {
+            await interaction.reply({
+                content: 'Please provide 10 or fewer options.',
+                ephemeral: true
+            });
+            return;
+        }
+
+        const emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
+        
+        const pollEmbed = new EmbedBuilder()
+            .setColor('#3A3EDB')
+            .setTitle('📊 ' + question)
+            .setDescription(
+                options.map((opt, i) => `${emojis[i]} ${opt}`).join('\n\n')
+            )
+            .setFooter({ text: `Poll created by ${interaction.user.tag}` });
+
+        const pollMessage = await interaction.reply({ embeds: [pollEmbed], fetchReply: true });
+        
+        // Add reactions for each option
+        for (let i = 0; i < options.length; i++) {
+            await pollMessage.react(emojis[i]);
+        }
+    }
+    // Add this to your interactionCreate event handler
+    else if (commandName === 'studygroup') {
+        if (interaction.options.getSubcommand() === 'create') {
+            const subject = interaction.options.getString('subject');
+            const capacity = interaction.options.getInteger('capacity');
+            
+            if (capacity < 2 || capacity > 50) {
+                await interaction.reply({
+                    content: '⚠️ Please set a capacity between 2 and 50 members.',
+                    ephemeral: true
+                });
+                return;
+            }
+
+            const groupEmbed = new EmbedBuilder()
+                .setColor('#3A3EDB')
+                .setTitle('📚 New Study Group')
+                .addFields(
+                    { name: '📖 Subject', value: subject, inline: true },
+                    { name: '👥 Capacity', value: `${capacity} members`, inline: true },
+                    { name: '👤 Created by', value: `<@${interaction.user.id}>`, inline: false },
+                    { name: '📊 Status', value: 'Open for joining (0/' + capacity + ')' }
+                )
+                .setDescription('Join this study group to collaborate and learn together!')
+                .setFooter({ text: 'React with 📚 to join the group' })
+                .setTimestamp();
+
+            const message = await interaction.reply({ embeds: [groupEmbed], fetchReply: true });
+            await message.react('📚');
+        }
+    }
 });
 
 client.on('interactionCreate', async interaction => {
@@ -801,3 +863,35 @@ function splitResponse(response) {
     }
     return chunks;
 }
+
+// Add this reaction handler for study groups
+client.on('messageReactionAdd', async (reaction, user) => {
+    if (user.bot) return;
+    
+    if (reaction.emoji.name === '📚') {
+        const message = reaction.message;
+        if (message.embeds.length > 0 && message.embeds[0].title === '📚 New Study Group') {
+            const embed = message.embeds[0];
+            const capacityField = embed.fields.find(f => f.name === '👥 Capacity');
+            const capacity = parseInt(capacityField.value);
+            const currentCount = reaction.count - 1; // Subtract 1 to exclude the bot's reaction
+            
+            if (currentCount > capacity) {
+                reaction.users.remove(user);
+                await message.channel.send({
+                    content: `Sorry <@${user.id}>, this study group is full!`,
+                    ephemeral: true
+                });
+            } else {
+                // Update the status field
+                const updatedEmbed = EmbedBuilder.from(embed)
+                    .spliceFields(3, 1, { 
+                        name: '📊 Status', 
+                        value: `Open for joining (${currentCount}/${capacity})`
+                    });
+                
+                await message.edit({ embeds: [updatedEmbed] });
+            }
+        }
+    }
+});
