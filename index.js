@@ -5,6 +5,11 @@ const { processFile } = require('./fileHandler.js');
 const express = require('express');
 const axios = require('axios');
 const { EmbedBuilder, ActivityType } = require('discord.js'); 
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const MUSIXMATCH_API_KEY = '756a6cca-803b-4fff-872d-45aac95d2a44';
+const MUSIXMATCH_BASE_URL = 'https://api.musixmatch.com/ws/1.1';
+const GENIUS_API_KEY = process.env.GENIUS_API_KEY;
+const cheerio = require('cheerio');
 
 const client = new Client({
     intents: [
@@ -639,10 +644,10 @@ client.on('interactionCreate', async interaction => {
                     { name: '📖 Subject', value: subject, inline: true },
                     { name: '👥 Capacity', value: `${capacity} members`, inline: true },
                     { name: '👤 Created by', value: `<@${interaction.user.id}>`, inline: false },
-                    { name: '📊 Status', value: 'Open for joining (0/' + capacity + ')' }
+                    { name: ' Status', value: 'Open for joining (0/' + capacity + ')' }
                 )
                 .setDescription('Join this study group to collaborate and learn together!')
-                .setFooter({ text: 'React with 📚 to join the group' })
+                .setFooter({ text: 'React with  to join the group' })
                 .setTimestamp();
 
             const message = await interaction.reply({ embeds: [groupEmbed], fetchReply: true });
@@ -731,6 +736,99 @@ const keywords = ['stfu', 'damn', 'come alive', 'gay', "for fuck's sake", "kill"
 client.on('messageCreate', async message => {
     console.log(`Received message: ${message.content}`);
     if (message.author.bot) return; 
+
+    if (message.content.endsWith('🎤')) {
+        try {
+            const lyricLine = message.content.slice(0, -2).trim();
+            console.log('Searching for lyrics:', lyricLine);
+
+            // Search song using Genius API
+            const searchResponse = await fetch(`https://api.genius.com/search?q=${encodeURIComponent(lyricLine)}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + GENIUS_API_KEY
+                }
+            });
+            
+            const searchData = await searchResponse.json();
+
+            if (searchData && searchData.response && searchData.response.hits && searchData.response.hits.length > 0) {
+                const song = searchData.response.hits[0].result;
+                const artist = song.primary_artist.name;
+                const title = song.title;
+                const url = song.url;  // Get the Genius webpage URL
+
+                console.log(`Found song: "${title}" by ${artist}`);
+                console.log('Fetching lyrics from:', url);
+
+                // Fetch the webpage content
+                const pageResponse = await fetch(url);
+                const html = await pageResponse.text();
+                const $ = cheerio.load(html);
+
+                // Extract lyrics from the webpage
+                const lyrics = $('[data-lyrics-container="true"]')
+                    .text()
+                    .trim()
+                    .replace(/\[\S+\]/g, '');  // Remove [Verse], [Chorus] etc.
+
+                if (lyrics) {
+                    const lines = lyrics
+                        .split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line !== '' && !line.includes('[') && !line.includes(']'));
+
+                    console.log('Processed Lyrics Lines:', lines.length);
+                    console.log('First few lines:', lines.slice(0, 3));
+
+                    let foundIndex = -1;
+                    const searchLine = lyricLine.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+                    console.log('Searching for line:', searchLine);
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const currentLine = lines[i].toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+                        console.log(`Comparing with line ${i}:`, currentLine);
+                        
+                        if (currentLine.includes(searchLine) || 
+                            searchLine.includes(currentLine)) {
+                            foundIndex = i;
+                            console.log('Match found at index:', i);
+                            break;
+                        }
+                    }
+
+                    if (foundIndex !== -1 && foundIndex < lines.length - 3) {
+                        console.log('Found index:', foundIndex);
+                        const nextLines = [
+                            lines[foundIndex + 1],
+                            lines[foundIndex + 2],
+                            lines[foundIndex + 3]
+                        ].filter(line => line && !line.includes('(')).join('\n');
+                        
+                        console.log('Next lines to send:', nextLines);
+                        await message.reply(`${nextLines} 🎵\n*From: ${title} by ${artist}*`);
+                    } else if (foundIndex !== -1 && foundIndex < lines.length - 1) {
+                        const remainingLines = lines.slice(foundIndex + 1)
+                            .filter(line => line && !line.includes('('))
+                            .join('\n');
+                        
+                        console.log('Remaining lines to send:', remainingLines);
+                        await message.reply(`${remainingLines} 🎵\n*From: ${title} by ${artist}*`);
+                    } else {
+                        console.log('Could not find matching line in lyrics');
+                        await message.reply(`Found "${title}" by ${artist}. Try with exact lyrics from the song! 🎵`);
+                    }
+                } else {
+                    console.log('No lyrics found on page');
+                    await message.reply(`Found "${title}" by ${artist}, but couldn't get the lyrics. Try another song! 🎵`);
+                }
+            } else {
+                await message.reply("I couldn't find a song with those lyrics. Try another line! 🎵");
+            }
+        } catch (error) {
+            console.error('Detailed Error:', error);
+            await message.reply('Oops! Something went wrong while searching for the lyrics. Try again later! 🎵');
+        }
+    }
 
     const lowerCaseContent = message.content.toLowerCase();
     if (message.mentions.has(client.user.id)) {
