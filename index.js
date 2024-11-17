@@ -284,7 +284,7 @@ client.on('ready', async () => {
                         .setRequired(true))
                     .addStringOption(option =>
                         option.setName('date')
-                        .setDescription('Event date and time')
+                        .setDescription('Event date and time (Format: YYYY-MM-DD HH:mm)')
                         .setRequired(true))
                     .addStringOption(option =>
                         option.setName('description')
@@ -540,6 +540,51 @@ client.on('interactionCreate', async interaction => {
                 content: 'An error occurred while fetching the notes. Error: ' + error.message,
                 ephemeral: true
             });
+        }
+    }
+    // Add this to your interactionCreate event handler
+    else if (commandName === 'event') {
+        if (interaction.options.getSubcommand() === 'create') {
+            const title = interaction.options.getString('title');
+            const date = interaction.options.getString('date');
+            const description = interaction.options.getString('description');
+
+            // Validate date format
+            const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
+            if (!dateRegex.test(date)) {
+                await interaction.reply({
+                    content: '⚠️ Invalid date format! Please use: `YYYY-MM-DD HH:mm`\n' +
+                        'Examples:\n' +
+                        '`2024-03-20 14:30` (March 20, 2024 at 2:30 PM)\n' +
+                        '`2024-04-01 09:00` (April 1, 2024 at 9:00 AM)\n' +
+                        '`2024-05-15 18:45` (May 15, 2024 at 6:45 PM)',
+                    ephemeral: true
+                });
+                return;
+            }
+
+            const eventDate = new Date(date);
+            if (isNaN(eventDate.getTime())) {
+                await interaction.reply({
+                    content: '⚠️ Invalid date! Please provide a valid date and time.',
+                    ephemeral: true
+                });
+                return;
+            }
+
+            const eventEmbed = new EmbedBuilder()
+                .setColor('#3A3EDB')
+                .setTitle('📅 ' + title)
+                .setDescription(description)
+                .addFields(
+                    { name: '📆 Date', value: eventDate.toLocaleDateString(), inline: true },
+                    { name: '⏰ Time', value: eventDate.toLocaleTimeString(), inline: true },
+                    { name: '👤 Organizer', value: `<@${interaction.user.id}>` }
+                )
+                .setFooter({ text: 'React with ✅ to RSVP' });
+
+            const message = await interaction.reply({ embeds: [eventEmbed], fetchReply: true });
+            await message.react('✅');
         }
     }
 });
