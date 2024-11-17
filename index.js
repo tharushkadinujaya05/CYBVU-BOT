@@ -6,8 +6,6 @@ const express = require('express');
 const axios = require('axios');
 const { EmbedBuilder, ActivityType } = require('discord.js'); 
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-const MUSIXMATCH_API_KEY = '756a6cca-803b-4fff-872d-45aac95d2a44';
-const MUSIXMATCH_BASE_URL = 'https://api.musixmatch.com/ws/1.1';
 const GENIUS_API_KEY = process.env.GENIUS_API_KEY;
 const cheerio = require('cheerio');
 
