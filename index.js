@@ -751,81 +751,29 @@ client.on('messageCreate', async message => {
             
             const searchData = await searchResponse.json();
 
-            if (searchData && searchData.response && searchData.response.hits && searchData.response.hits.length > 0) {
-                const song = searchData.response.hits[0].result;
-                const artist = song.primary_artist.name;
-                const title = song.title;
-                const url = song.url;  // Get the Genius webpage URL
-
-                console.log(`Found song: "${title}" by ${artist}`);
-                console.log('Fetching lyrics from:', url);
-
-                // Fetch the webpage content
-                const pageResponse = await fetch(url);
-                const html = await pageResponse.text();
-                const $ = cheerio.load(html);
-
-                // Extract lyrics from the webpage
-                const lyrics = $('[data-lyrics-container="true"]')
-                    .text()
-                    .trim()
-                    .replace(/\[\S+\]/g, '');  // Remove [Verse], [Chorus] etc.
-
-                if (lyrics) {
-                    const lines = lyrics
-                        .split('\n')
-                        .map(line => line.trim())
-                        .filter(line => line !== '' && !line.includes('[') && !line.includes(']'));
-
-                    console.log('Processed Lyrics Lines:', lines.length);
-                    console.log('First few lines:', lines.slice(0, 3));
-
-                    let foundIndex = -1;
-                    const searchLine = lyricLine.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-                    console.log('Searching for line:', searchLine);
-
-                    for (let i = 0; i < lines.length; i++) {
-                        const currentLine = lines[i].toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-                        console.log(`Comparing with line ${i}:`, currentLine);
-                        
-                        if (currentLine.includes(searchLine) || 
-                            searchLine.includes(currentLine)) {
-                            foundIndex = i;
-                            console.log('Match found at index:', i);
-                            break;
-                        }
-                    }
-
-                    if (foundIndex !== -1 && foundIndex < lines.length - 3) {
-                        console.log('Found index:', foundIndex);
-                        const nextLines = [
-                            lines[foundIndex + 1],
-                            lines[foundIndex + 2],
-                            lines[foundIndex + 3]
-                        ].filter(line => line && !line.includes('(')).join('\n');
-                        
-                        console.log('Next lines to send:', nextLines);
-                        await message.reply(`${nextLines} 🎵\n*From: ${title} by ${artist}*`);
-                    } else if (foundIndex !== -1 && foundIndex < lines.length - 1) {
-                        const remainingLines = lines.slice(foundIndex + 1)
-                            .filter(line => line && !line.includes('('))
-                            .join('\n');
-                        
-                        console.log('Remaining lines to send:', remainingLines);
-                        await message.reply(`${remainingLines} 🎵\n*From: ${title} by ${artist}*`);
-                    } else {
-                        console.log('Could not find matching line in lyrics');
-                        await message.reply(`Found "${title}" by ${artist}. Try with exact lyrics from the song! 🎵`);
-                    }
-                } else {
-                    console.log('No lyrics found on page');
-                    await message.reply(`Found "${title}" by ${artist}, but couldn't get the lyrics. Try another song! 🎵`);
-                }
-            } else {
+            if (!searchData?.response?.hits?.length) {
+                console.log('No songs found in search');
                 await message.reply("I couldn't find a song with those lyrics. Try another line! 🎵");
+                return;
             }
+
+            const song = searchData.response.hits[0].result;
+            const artist = song.primary_artist.name;
+            const title = song.title;
+
+            console.log(`Found song: "${title}" by ${artist}`);
+
+            // Use Gemini to get the next line
+            const prompt = `You are a lyrics expert. For the song "${title}" by ${artist}", if someone says "${lyricLine}", what's the NEXT line that comes in the song? Respond with ONLY the next line, nothing else. If you're not sure about the exact next line, respond with "I'm not sure about the next line for that song."`;
+            
+            console.log('Sending prompt to Gemini:', prompt);  // Added this line
+            const nextLine = await runGemini(prompt);
+            console.log('Gemini response:', nextLine);  // Added this line too
+            
+            await message.reply(`${nextLine} 🎵\n*From: ${title} by ${artist}*`);
+
         } catch (error) {
-            console.error('Detailed Error:', error);
+            console.error('Error:', error);
             await message.reply('Oops! Something went wrong while searching for the lyrics. Try again later! 🎵');
         }
     }
