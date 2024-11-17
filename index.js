@@ -763,14 +763,14 @@ client.on('messageCreate', async message => {
 
             console.log(`Found song: "${title}" by ${artist}`);
 
-            // Use Gemini to get the next line
-            const prompt = `You are a lyrics expert. For the song "${title}" by ${artist}", if someone says "${lyricLine}", what's the NEXT line that comes in the song? Respond with ONLY the next line, nothing else. If you're not sure about the exact next line, respond with "I'm not sure about the next line for that song."`;
+            // Updated prompt to get three lines
+            const prompt = `You are a lyrics expert. For the song "${title}" by ${artist}", if someone says "${lyricLine}", what are the NEXT THREE LINES that come in the song? Respond with ONLY the next three lines, one line per line (with line breaks), nothing else. If you're not sure about the exact next lines, respond with "I'm not sure about the next lines for that song."`;
             
-            console.log('Sending prompt to Gemini:', prompt);  // Added this line
-            const nextLine = await runGemini(prompt);
-            console.log('Gemini response:', nextLine);  // Added this line too
+            console.log('Sending prompt to Gemini:', prompt);
+            const nextLines = await runGemini(prompt);
+            console.log('Gemini response:', nextLines);
             
-            await message.reply(`${nextLine} 🎵\n*From: ${title} by ${artist}*`);
+            await message.reply(`${nextLines} 🎵\n*From: ${title} by ${artist}*`);
 
         } catch (error) {
             console.error('Error:', error);
